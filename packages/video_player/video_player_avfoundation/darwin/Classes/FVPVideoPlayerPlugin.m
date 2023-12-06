@@ -527,7 +527,11 @@ NS_INLINE CGFloat radiansToDegrees(CGFloat radians) {
   _player.volume = (float)((volume < 0.0) ? 0.0 : ((volume > 1.0) ? 1.0 : volume));
 }
 
-- (void)loadAsset:(NSURL)url {
+- (void)loadAsset:(NSURL *)url httpHeaders:(nonnull NSDictionary<NSString *, NSString *> *)headers {
+    NSDictionary<NSString *, id> *options = nil;
+    if ([headers count] != 0) {
+      options = @{@"AVURLAssetHTTPHeaderFieldsKey" : headers};
+    }
     AVURLAsset *urlAsset = [AVURLAsset URLAssetWithURL:url options:options];
     AVPlayerItem *item = [AVPlayerItem playerItemWithAsset:urlAsset];
     [_player replaceCurrentItemWithPlayerItem: item];
@@ -783,31 +787,31 @@ NS_INLINE CGFloat radiansToDegrees(CGFloat radians) {
     FVPVideoPlayer *player = self.playersByTextureId[@(input.textureId)];
 
     if (input.asset) {
-    NSString *assetPath;
-    if (input.packageName) {
-      assetPath = [_registrar lookupKeyForAsset:input.asset fromPackage:input.packageName];
-    } else {
-      assetPath = [_registrar lookupKeyForAsset:input.asset];
-    }
-    @try {
-        NSString *path = [[NSBundle mainBundle] pathForResource:asset ofType:nil];
+        NSString *assetPath;
+        if (input.packageName) {
+            assetPath = [_registrar lookupKeyForAsset:input.asset fromPackage:input.packageName];
+        } else {
+            assetPath = [_registrar lookupKeyForAsset:input.asset];
+        }
+        @try {
+            NSString *path = [[NSBundle mainBundle] pathForResource:assetPath ofType:nil];
 #if TARGET_OS_OSX
-  // See https://github.com/flutter/flutter/issues/135302
-  // TODO(stuartmorgan): Remove this if the asset APIs are adjusted to work better for macOS.
-  if (!path) {
-    path = [NSURL URLWithString:asset relativeToURL:NSBundle.mainBundle.bundleURL].path;
-  }
+            // See https://github.com/flutter/flutter/issues/135302
+            // TODO(stuartmorgan): Remove this if the asset APIs are adjusted to work better for macOS.
+            if (!path) {
+                path = [NSURL URLWithString:asset relativeToURL:NSBundle.mainBundle.bundleURL].path;
+            }
 #endif
-    [player loadAsset:[NSURL fileURLWithPath:path]];
+            [player loadAsset:[NSURL fileURLWithPath:path] httpHeaders:input.httpHeaders];
 
-    } @catch (NSException *exception) {
-      *error = [FlutterError errorWithCode:@"video_player" message:exception.reason details:nil];
+        } @catch (NSException *exception) {
+            *error = [FlutterError errorWithCode:@"video_player" message:exception.reason details:nil];
+        }
+    } else if (input.uri) {
+        [player loadAsset:[NSURL URLWithString:input.uri] httpHeaders:input.httpHeaders];
+    } else {
+        *error = [FlutterError errorWithCode:@"video_player" message:@"not implemented" details:nil];
     }
-  } else if (input.uri) {
-    [player loadAsset:[NSURL URLWithString:input.uri]];
-  } else {
-    *error = [FlutterError errorWithCode:@"video_player" message:@"not implemented" details:nil];
-  }
 
 }
 
