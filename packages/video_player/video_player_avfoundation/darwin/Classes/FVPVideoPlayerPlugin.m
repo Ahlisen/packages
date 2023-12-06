@@ -534,7 +534,11 @@ NS_INLINE CGFloat radiansToDegrees(CGFloat radians) {
     }
     AVURLAsset *urlAsset = [AVURLAsset URLAssetWithURL:url options:options];
     AVPlayerItem *item = [AVPlayerItem playerItemWithAsset:urlAsset];
+    //_displayLink.running = NO;
+    [self removeKeyValueObservers];
     [_player replaceCurrentItemWithPlayerItem: item];
+    [self addObserversForItem:item player:_player];
+    //_displayLink.running = YES;
 }
 
 - (void)setPlaybackSpeed:(double)speed {

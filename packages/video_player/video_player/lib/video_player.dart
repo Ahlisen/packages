@@ -557,40 +557,20 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
     await _applyPlayPause();
   }
 
-/// Loads new asset
-    Future<void> loadAsset(DataSource dataSourceType) async {
+  /// Loads new asset
+  Future<void> loadAsset(Uri dataSource) async {
     if (_isDisposedOrNotInitialized) {
       return;
     }
-    await _videoPlayerPlatform.load(_textureId, dataSourceType);
 
-    // if (value.isPlaying) {
-    //   await _videoPlayerPlatform.play(_textureId);
+    final DataSource dataSourceDescription = DataSource(
+      sourceType: DataSourceType.network,
+      uri: dataSource.toString(),
+      formatHint: formatHint,
+      httpHeaders: httpHeaders,
+    );
 
-    //   // Cancel previous timer.
-    //   _timer?.cancel();
-    //   _timer = Timer.periodic(
-    //     const Duration(milliseconds: 500),
-    //     (Timer timer) async {
-    //       if (_isDisposed) {
-    //         return;
-    //       }
-    //       final Duration? newPosition = await position;
-    //       if (newPosition == null) {
-    //         return;
-    //       }
-    //       _updatePosition(newPosition);
-    //     },
-    //   );
-
-    //   // This ensures that the correct playback speed is always applied when
-    //   // playing back. This is necessary because we do not set playback speed
-    //   // when paused.
-    //   await _applyPlaybackSpeed();
-    // } else {
-    //   _timer?.cancel();
-    //   await _videoPlayerPlatform.pause(_textureId);
-    // }
+    await _videoPlayerPlatform.load(_textureId, dataSourceDescription);
   }
 
   Future<void> _applyLooping() async {

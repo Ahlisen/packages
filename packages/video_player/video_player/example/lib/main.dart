@@ -264,6 +264,9 @@ class _BumbleBeeRemoteVideoState extends State<_BumbleBeeRemoteVideo> {
               ),
             ),
           ),
+          TextButton(onPressed: () {
+            _controller.loadAsset(Uri.parse('https://flutter.github.io/assets-for-api-docs/assets/videos/butterfly.mp4'));
+          }, child: const Text('Load new')),
         ],
       ),
     );
