@@ -49,7 +49,7 @@ class VideoPlayerValue {
     this.isLooping = false,
     this.isBuffering = false,
     this.volume = 1.0,
-    this.playbackSpeed = 0.75,
+    this.playbackSpeed = 1.0,
     this.rotationCorrection = 0,
     this.errorDescription,
     this.isCompleted = false,
