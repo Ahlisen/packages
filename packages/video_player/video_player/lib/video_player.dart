@@ -49,7 +49,7 @@ class VideoPlayerValue {
     this.isLooping = false,
     this.isBuffering = false,
     this.volume = 1.0,
-    this.playbackSpeed = 0.5,
+    this.playbackSpeed = 0.75,
     this.rotationCorrection = 0,
     this.errorDescription,
     this.isCompleted = false,
@@ -555,6 +555,42 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
   Future<void> pause() async {
     value = value.copyWith(isPlaying: false);
     await _applyPlayPause();
+  }
+
+/// Loads new asset
+    Future<void> loadAsset(DataSource dataSourceType) async {
+    if (_isDisposedOrNotInitialized) {
+      return;
+    }
+    await _videoPlayerPlatform.load(_textureId, dataSourceType);
+
+    // if (value.isPlaying) {
+    //   await _videoPlayerPlatform.play(_textureId);
+
+    //   // Cancel previous timer.
+    //   _timer?.cancel();
+    //   _timer = Timer.periodic(
+    //     const Duration(milliseconds: 500),
+    //     (Timer timer) async {
+    //       if (_isDisposed) {
+    //         return;
+    //       }
+    //       final Duration? newPosition = await position;
+    //       if (newPosition == null) {
+    //         return;
+    //       }
+    //       _updatePosition(newPosition);
+    //     },
+    //   );
+
+    //   // This ensures that the correct playback speed is always applied when
+    //   // playing back. This is necessary because we do not set playback speed
+    //   // when paused.
+    //   await _applyPlaybackSpeed();
+    // } else {
+    //   _timer?.cancel();
+    //   await _videoPlayerPlatform.pause(_textureId);
+    // }
   }
 
   Future<void> _applyLooping() async {

@@ -28,6 +28,13 @@ class _ApiLogger implements TestHostVideoPlayerApi {
   }
 
   @override
+  void load(LoadMessage arg) {
+    // log.add('create');
+    // createMessage = arg;
+    // return TextureMessage(textureId: 3);
+  }
+
+  @override
   void dispose(TextureMessage arg) {
     log.add('dispose');
     textureMessage = arg;

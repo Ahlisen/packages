@@ -527,6 +527,12 @@ NS_INLINE CGFloat radiansToDegrees(CGFloat radians) {
   _player.volume = (float)((volume < 0.0) ? 0.0 : ((volume > 1.0) ? 1.0 : volume));
 }
 
+- (void)loadAsset:(NSURL)url {
+    AVURLAsset *urlAsset = [AVURLAsset URLAssetWithURL:url options:options];
+    AVPlayerItem *item = [AVPlayerItem playerItemWithAsset:urlAsset];
+    [_player replaceCurrentItemWithPlayerItem: item];
+}
+
 - (void)setPlaybackSpeed:(double)speed {
   // See https://developer.apple.com/library/archive/qa/qa1772/_index.html for an explanation of
   // these checks.
@@ -771,6 +777,38 @@ NS_INLINE CGFloat radiansToDegrees(CGFloat radians) {
     *error = [FlutterError errorWithCode:@"video_player" message:@"not implemented" details:nil];
     return nil;
   }
+}
+
+- (void)load:(FVPLoadMessage *)input error:(FlutterError **)error {
+    FVPVideoPlayer *player = self.playersByTextureId[@(input.textureId)];
+
+    if (input.asset) {
+    NSString *assetPath;
+    if (input.packageName) {
+      assetPath = [_registrar lookupKeyForAsset:input.asset fromPackage:input.packageName];
+    } else {
+      assetPath = [_registrar lookupKeyForAsset:input.asset];
+    }
+    @try {
+        NSString *path = [[NSBundle mainBundle] pathForResource:asset ofType:nil];
+#if TARGET_OS_OSX
+  // See https://github.com/flutter/flutter/issues/135302
+  // TODO(stuartmorgan): Remove this if the asset APIs are adjusted to work better for macOS.
+  if (!path) {
+    path = [NSURL URLWithString:asset relativeToURL:NSBundle.mainBundle.bundleURL].path;
+  }
+#endif
+    [player loadAsset:[NSURL fileURLWithPath:path]];
+
+    } @catch (NSException *exception) {
+      *error = [FlutterError errorWithCode:@"video_player" message:exception.reason details:nil];
+    }
+  } else if (input.uri) {
+    [player loadAsset:[NSURL URLWithString:input.uri]];
+  } else {
+    *error = [FlutterError errorWithCode:@"video_player" message:@"not implemented" details:nil];
+  }
+
 }
 
 - (void)dispose:(FVPTextureMessage *)input error:(FlutterError **)error {

@@ -68,6 +68,43 @@ class AndroidVideoPlayer extends VideoPlayerPlatform {
   }
 
   @override
+  Future<int?> load(int textureId, DataSource dataSource) async {
+    String? asset;
+    String? packageName;
+    String? uri;
+    String? formatHint;
+    Map<String, String> httpHeaders = <String, String>{};
+    switch (dataSource.sourceType) {
+      case DataSourceType.asset:
+        asset = dataSource.asset;
+        packageName = dataSource.package;
+        break;
+      case DataSourceType.network:
+        uri = dataSource.uri;
+        formatHint = _videoFormatStringMap[dataSource.formatHint];
+        httpHeaders = dataSource.httpHeaders;
+        break;
+      case DataSourceType.file:
+        uri = dataSource.uri;
+        httpHeaders = dataSource.httpHeaders;
+        break;
+      case DataSourceType.contentUri:
+        uri = dataSource.uri;
+        break;
+    }
+    final LoadMessage message = LoadMessage(
+      textureId: textureId,
+      asset: asset,
+      packageName: packageName,
+      uri: uri,
+      httpHeaders: httpHeaders,
+      formatHint: formatHint,
+    );
+
+    await _api.load(message);
+  }
+
+  @override
   Future<void> setLooping(int textureId, bool looping) {
     return _api.setLooping(LoopingMessage(
       textureId: textureId,
