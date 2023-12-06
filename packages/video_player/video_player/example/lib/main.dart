@@ -266,7 +266,40 @@ class _BumbleBeeRemoteVideoState extends State<_BumbleBeeRemoteVideo> {
           ),
           TextButton(onPressed: () {
             _controller.loadAsset(Uri.parse('https://flutter.github.io/assets-for-api-docs/assets/videos/butterfly.mp4'));
-          }, child: const Text('Load new')),
+          }, child: const Text('Load butterfly')),
+          TextButton(onPressed: () {
+            _controller.loadAsset(Uri.parse('https://flutter.github.io/assets-for-api-docs/assets/videos/bee.mp4'));
+          }, child: const Text('Load bee')),
+          TextButton(onPressed: () {
+            _controller.dispose();
+            _controller = VideoPlayerController.networkUrl(
+            Uri.parse(
+                'https://flutter.github.io/assets-for-api-docs/assets/videos/butterfly.mp4'),
+            closedCaptionFile: _loadCaptions(),
+            videoPlayerOptions: VideoPlayerOptions(mixWithOthers: true),
+          );
+              _controller.addListener(() {
+                setState(() {});
+              });
+              _controller.setLooping(true);
+              _controller.initialize();
+              _controller.play();
+          }, child: const Text('Create new player for butterfly')),
+          TextButton(onPressed: () {
+            _controller.dispose();
+            _controller = VideoPlayerController.networkUrl(
+                Uri.parse(
+                    'https://flutter.github.io/assets-for-api-docs/assets/videos/bee.mp4'),
+                closedCaptionFile: _loadCaptions(),
+                videoPlayerOptions: VideoPlayerOptions(mixWithOthers: true),
+              );
+          _controller.addListener(() {
+            setState(() {});
+          });
+          _controller.setLooping(true);
+          _controller.initialize();
+          _controller.play();
+          }, child: const Text('Create new player for bee')),
         ],
       ),
     );

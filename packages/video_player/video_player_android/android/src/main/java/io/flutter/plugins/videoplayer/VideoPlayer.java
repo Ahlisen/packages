@@ -260,12 +260,9 @@ final class VideoPlayer {
   }
 
   void loadAsset(Context context,
-      EventChannel eventChannel,
-      TextureRegistry.SurfaceTextureEntry textureEntry,
       String dataSource,
       String formatHint,
-      @NonNull Map<String, String> httpHeaders,
-      VideoPlayerOptions options) {
+      @NonNull Map<String, String> httpHeaders) {
     Uri uri = Uri.parse(dataSource);
 
     buildHttpDataSourceFactory(httpHeaders);
