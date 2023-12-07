@@ -65,6 +65,9 @@ class FakeController extends ValueNotifier<VideoPlayerValue>
   Future<void> play() async {}
 
   @override
+  Future<void> loadAsset(Uri dataSource) async {}
+
+  @override
   Future<void> setLooping(bool looping) async {}
 
   @override
