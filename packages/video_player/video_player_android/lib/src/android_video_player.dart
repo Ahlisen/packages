@@ -68,7 +68,7 @@ class AndroidVideoPlayer extends VideoPlayerPlatform {
   }
 
   @override
-  Future<int?> load(int textureId, DataSource dataSource) async {
+  Future<void> load(int textureId, DataSource dataSource) async {
     String? asset;
     String? packageName;
     String? uri;
