@@ -1,4 +1,4 @@
-name: video_player_web
+name: video_player_web_fork
 description: Web platform implementation of video_player.
 repository: https://github.com/flutter/packages/tree/main/packages/video_player/video_player_web
 issue_tracker: https://github.com/flutter/flutter/issues?q=is%3Aissue+is%3Aopen+label%3A%22p%3A+video_player%22
@@ -22,7 +22,7 @@ dependencies:
     sdk: flutter
   flutter_web_plugins:
     sdk: flutter
-  video_player_platform_interface:
+  video_player_platform_interface_fork:
     git: 
       url: https://github.com/Ahlisen/packages
       path: packages/video_player/video_player_platform_interface
