@@ -570,8 +570,6 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
       httpHeaders: httpHeaders,
     );
 
-    value = value.copyWith(isInitialized: false);
-
     await _videoPlayerPlatform.load(_textureId, dataSourceDescription);
   }
 
