@@ -536,6 +536,7 @@ NS_INLINE CGFloat radiansToDegrees(CGFloat radians) {
     AVPlayerItem *item = [AVPlayerItem playerItemWithAsset:urlAsset];
     //_displayLink.running = NO;
     [self removeKeyValueObservers];
+    _isInitialized = NO;
     [_player replaceCurrentItemWithPlayerItem: item];
     [self addObserversForItem:item player:_player];
     //_displayLink.running = YES;
