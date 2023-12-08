@@ -26,7 +26,7 @@ dependencies:
     git: 
       url: https://github.com/Ahlisen/packages
       path: packages/video_player/video_player_platform_interface
-      ref: 51a7f5db81d7dfdd16b723f6c1f4c8b0632c7a6d
+      ref: d9347bafd597c7919efc775a931068c404e9b46d
 
 dev_dependencies:
   flutter_test:
