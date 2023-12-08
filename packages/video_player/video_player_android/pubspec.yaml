@@ -1,4 +1,4 @@
-name: video_player_android_fork
+name: video_player_android
 description: Android implementation of the video_player plugin.
 repository: https://github.com/flutter/packages/tree/main/packages/video_player/video_player_android
 issue_tracker: https://github.com/flutter/flutter/issues?q=is%3Aissue+is%3Aopen+label%3A%22p%3A+video_player%22
@@ -21,7 +21,7 @@ flutter:
 dependencies:
   flutter:
     sdk: flutter
-  video_player_platform_interface_fork:
+  video_player_platform_interface:
     git: 
       url: https://github.com/Ahlisen/packages
       path: packages/video_player/video_player_platform_interface
