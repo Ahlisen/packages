@@ -122,6 +122,7 @@ static void *presentationSizeContext = &presentationSizeContext;
 static void *durationContext = &durationContext;
 static void *playbackLikelyToKeepUpContext = &playbackLikelyToKeepUpContext;
 static void *rateContext = &rateContext;
+static void *isReadyToDisplayContext = &isReadyToDisplayContext;
 
 @implementation FVPVideoPlayer
 - (instancetype)initWithAsset:(NSString *)asset
@@ -179,6 +180,11 @@ static void *rateContext = &rateContext;
            forKeyPath:@"rate"
               options:NSKeyValueObservingOptionInitial | NSKeyValueObservingOptionNew
               context:rateContext];
+
+    [_playerLayer addObserver:self
+             forKeyPath:@"isReadyForDisplay"
+                options:NSKeyValueObservingOptionInitial | NSKeyValueObservingOptionNew
+                context:isReadyToDisplayContext];
 
   // Add an observer that will respond to itemDidPlayToEndTime
   [[NSNotificationCenter defaultCenter] addObserver:self
@@ -374,7 +380,7 @@ NS_INLINE CGFloat radiansToDegrees(CGFloat radians) {
         [item addOutput:_videoOutput];
         [self setupEventSinkIfReadyToPlay];
         [self updatePlayingState];
-        _eventSink(@{@"event" : @"reloadingEnd"});
+//        _eventSink(@{@"event" : @"reloadingEnd"});
         break;
     }
   } else if (context == presentationSizeContext || context == durationContext) {
@@ -404,6 +410,13 @@ NS_INLINE CGFloat radiansToDegrees(CGFloat radians) {
     if (_eventSink != nil) {
       _eventSink(
           @{@"event" : @"isPlayingStateUpdate", @"isPlaying" : player.rate > 0 ? @YES : @NO});
+    }
+  } else if (context == isReadyToDisplayContext) {
+    // Important: Make sure to cast the object to AVPlayer when observing the rate property,
+    // as it is not available in AVPlayerItem.
+    // AVPlayer *player = (AVPlayer *)object;
+    if (_eventSink != nil) {
+      _eventSink(@{@"event" : @"reloadingEnd"});
     }
   }
 }
