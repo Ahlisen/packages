@@ -204,6 +204,7 @@ class VideoPlayerValue {
         'captionOffset: $captionOffset, '
         'buffered: [${buffered.join(', ')}], '
         'isInitialized: $isInitialized, '
+        'isReadyToDisplay: $isReadyToDisplay, '
         'isPlaying: $isPlaying, '
         'isLooping: $isLooping, '
         'isBuffering: $isBuffering, '
@@ -232,6 +233,7 @@ class VideoPlayerValue {
           size == other.size &&
           rotationCorrection == other.rotationCorrection &&
           isInitialized == other.isInitialized &&
+          isReadyToDisplay == other.isReadyToDisplay &&
           isCompleted == other.isCompleted;
 
   @override
@@ -250,6 +252,7 @@ class VideoPlayerValue {
         size,
         rotationCorrection,
         isInitialized,
+        isReadyToDisplay,
         isCompleted,
       );
 }
