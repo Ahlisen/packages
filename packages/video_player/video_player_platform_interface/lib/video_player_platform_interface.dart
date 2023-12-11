@@ -297,6 +297,10 @@ enum VideoEventType {
   /// The video stopped to buffer.
   bufferingEnd,
 
+  /// Adding a new item to player
+  reloadingStart,
+  reloadingEnd,
+
   /// The playback state of the video has changed.
   ///
   /// This event is fired when the video starts or pauses due to user actions or

@@ -374,6 +374,7 @@ NS_INLINE CGFloat radiansToDegrees(CGFloat radians) {
         [item addOutput:_videoOutput];
         [self setupEventSinkIfReadyToPlay];
         [self updatePlayingState];
+        _eventSink(@{@"event" : @"reloadingEnd"});
         break;
     }
   } else if (context == presentationSizeContext || context == durationContext) {
@@ -537,6 +538,19 @@ NS_INLINE CGFloat radiansToDegrees(CGFloat radians) {
     //_displayLink.running = NO;
     [self removeKeyValueObservers];
     [_player replaceCurrentItemWithPlayerItem: item];
+
+//    _isInitialized = NO;
+//    int64_t duration = 0;
+//    CGFloat noSize = 0.0;
+//    _eventSink(@{
+//      @"event" : @"initialized",
+//      @"duration" : @(duration),
+//      @"width" : @(noSize),
+//      @"height" : @(noSize)
+//    });
+
+    _eventSink(@{@"event" : @"reloadingStart"});
+
     [self addObserversForItem:item player:_player];
     //_displayLink.running = YES;
 }

@@ -182,6 +182,10 @@ class AVFoundationVideoPlayer extends VideoPlayerPlatform {
           return VideoEvent(eventType: VideoEventType.bufferingStart);
         case 'bufferingEnd':
           return VideoEvent(eventType: VideoEventType.bufferingEnd);
+        case 'reloadingStart':
+          return VideoEvent(eventType: VideoEventType.reloadingStart);
+        case 'reloadingEnd':
+          return VideoEvent(eventType: VideoEventType.reloadingEnd);
         case 'isPlayingStateUpdate':
           return VideoEvent(
             eventType: VideoEventType.isPlayingStateUpdate,

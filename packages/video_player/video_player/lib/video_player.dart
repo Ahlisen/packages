@@ -477,6 +477,12 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
         case VideoEventType.bufferingEnd:
           value = value.copyWith(isBuffering: false);
           break;
+        case VideoEventType.reloadingStart:
+          value = value.copyWith(isInitialized: false);
+          break;
+        case VideoEventType.reloadingEnd:
+          value = value.copyWith(isInitialized: true);
+          break;
         case VideoEventType.isPlayingStateUpdate:
           if (event.isPlaying ?? false) {
             value =
