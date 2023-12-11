@@ -108,6 +108,8 @@
 // frame is successfully provided.
 @property(nonatomic, assign) BOOL waitingForFrame;
 
+@property(nonatomic, assign) BOOL loadingNewAsset;
+
 - (instancetype)initWithURL:(NSURL *)url
                frameUpdater:(FVPFrameUpdater *)frameUpdater
                 displayLink:(FVPDisplayLink *)displayLink
@@ -416,7 +418,7 @@ NS_INLINE CGFloat radiansToDegrees(CGFloat radians) {
     // as it is not available in AVPlayerItem.
     // AVPlayer *player = (AVPlayer *)object;
     if (_eventSink != nil) {
-      _eventSink(@{@"event" : @"reloadingEnd"});
+      //_eventSink(@{@"event" : @"reloadingEnd"});
     }
   }
 }
@@ -562,9 +564,10 @@ NS_INLINE CGFloat radiansToDegrees(CGFloat radians) {
 //      @"height" : @(noSize)
 //    });
 
-    _eventSink(@{@"event" : @"reloadingStart"});
-
     [self addObserversForItem:item player:_player];
+    _eventSink(@{@"event" : @"reloadingStart"});
+    self.loadingNewAsset = YES;
+    self.waitingForFrame = YES;
     //_displayLink.running = YES;
 }
 
@@ -608,6 +611,12 @@ NS_INLINE CGFloat radiansToDegrees(CGFloat radians) {
 
   if (self.waitingForFrame && buffer) {
     self.waitingForFrame = NO;
+
+      if (self.loadingNewAsset && _eventSink != nil) {
+          _eventSink(@{@"event" : @"reloadingEnd"});
+          self.loadingNewAsset = NO;
+      }
+
     // If the display link was only running temporarily to pick up a new frame while the video was
     // paused, stop it again.
     if (!self.isPlaying) {
@@ -691,6 +700,7 @@ NS_INLINE CGFloat radiansToDegrees(CGFloat radians) {
   [currentItem removeObserver:self forKeyPath:@"presentationSize"];
   [currentItem removeObserver:self forKeyPath:@"duration"];
   [currentItem removeObserver:self forKeyPath:@"playbackLikelyToKeepUp"];
+    [_playerLayer removeObserver:self forKeyPath:@"isReadyForDisplay"];
   [_player removeObserver:self forKeyPath:@"rate"];
 }
 

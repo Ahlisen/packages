@@ -48,6 +48,7 @@ class VideoPlayerValue {
     this.isPlaying = false,
     this.isLooping = false,
     this.isBuffering = false,
+    this.isReadyToDisplay = false,
     this.volume = 1.0,
     this.playbackSpeed = 1.0,
     this.rotationCorrection = 0,
@@ -100,6 +101,9 @@ class VideoPlayerValue {
 
   /// True if the video is currently buffering.
   final bool isBuffering;
+
+  /// True if the video is ready to display a frame.
+  final bool isReadyToDisplay;
 
   /// The current volume of the playback.
   final double volume;
@@ -161,6 +165,7 @@ class VideoPlayerValue {
     bool? isPlaying,
     bool? isLooping,
     bool? isBuffering,
+    bool? isReadyToDisplay,
     double? volume,
     double? playbackSpeed,
     int? rotationCorrection,
@@ -175,6 +180,7 @@ class VideoPlayerValue {
       captionOffset: captionOffset ?? this.captionOffset,
       buffered: buffered ?? this.buffered,
       isInitialized: isInitialized ?? this.isInitialized,
+      isReadyToDisplay: isReadyToDisplay ?? this.isReadyToDisplay,
       isPlaying: isPlaying ?? this.isPlaying,
       isLooping: isLooping ?? this.isLooping,
       isBuffering: isBuffering ?? this.isBuffering,
@@ -453,6 +459,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
             rotationCorrection: event.rotationCorrection,
             isInitialized: event.duration != null,
             errorDescription: null,
+            isReadyToDisplay: true,
             isCompleted: false,
           );
           initializingCompleter.complete(null);
@@ -478,10 +485,10 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
           value = value.copyWith(isBuffering: false);
           break;
         case VideoEventType.reloadingStart:
-          value = value.copyWith(isInitialized: false);
+          value = value.copyWith(isReadyToDisplay: false);
           break;
         case VideoEventType.reloadingEnd:
-          value = value.copyWith(isInitialized: true);
+          value = value.copyWith(isReadyToDisplay: true);
           break;
         case VideoEventType.isPlayingStateUpdate:
           if (event.isPlaying ?? false) {
