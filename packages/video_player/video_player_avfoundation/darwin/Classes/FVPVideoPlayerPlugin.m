@@ -417,8 +417,9 @@ NS_INLINE CGFloat radiansToDegrees(CGFloat radians) {
     // Important: Make sure to cast the object to AVPlayer when observing the rate property,
     // as it is not available in AVPlayerItem.
     // AVPlayer *player = (AVPlayer *)object;
-    if (_eventSink != nil) {
-      //_eventSink(@{@"event" : @"reloadingEnd"});
+      AVPlayerLayer *playerLayer = (AVPlayerLayer *)object;
+    if (_eventSink != nil && playerLayer.isReadyForDisplay) {
+      _eventSink(@{@"event" : @"reloadingEnd"});
     }
   }
 }
@@ -564,11 +565,15 @@ NS_INLINE CGFloat radiansToDegrees(CGFloat radians) {
 //      @"height" : @(noSize)
 //    });
 
+    if (_eventSink != nil){
+        _eventSink(@{@"event" : @"reloadingStart"});
+    }
+
     [self addObserversForItem:item player:_player];
-    _eventSink(@{@"event" : @"reloadingStart"});
-    self.loadingNewAsset = YES;
-    self.waitingForFrame = YES;
-    //_displayLink.running = YES;
+
+//    self.loadingNewAsset = YES;
+//    self.waitingForFrame = YES;
+//    self.displayLink.running = YES;
 }
 
 - (void)setPlaybackSpeed:(double)speed {
@@ -612,10 +617,10 @@ NS_INLINE CGFloat radiansToDegrees(CGFloat radians) {
   if (self.waitingForFrame && buffer) {
     self.waitingForFrame = NO;
 
-      if (self.loadingNewAsset && _eventSink != nil) {
-          _eventSink(@{@"event" : @"reloadingEnd"});
-          self.loadingNewAsset = NO;
-      }
+//      if (self.loadingNewAsset && _eventSink != nil) {
+//          _eventSink(@{@"event" : @"reloadingEnd"});
+//          self.loadingNewAsset = NO;
+//      }
 
     // If the display link was only running temporarily to pick up a new frame while the video was
     // paused, stop it again.
