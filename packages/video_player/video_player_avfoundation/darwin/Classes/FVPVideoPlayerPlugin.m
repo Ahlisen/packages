@@ -184,7 +184,7 @@ static void *isReadyToDisplayContext = &isReadyToDisplayContext;
               context:rateContext];
 
     [_playerLayer addObserver:self
-             forKeyPath:@"isReadyForDisplay"
+             forKeyPath:@"readyForDisplay"
                 options:NSKeyValueObservingOptionInitial | NSKeyValueObservingOptionNew
                 context:isReadyToDisplayContext];
 
@@ -705,7 +705,7 @@ NS_INLINE CGFloat radiansToDegrees(CGFloat radians) {
   [currentItem removeObserver:self forKeyPath:@"presentationSize"];
   [currentItem removeObserver:self forKeyPath:@"duration"];
   [currentItem removeObserver:self forKeyPath:@"playbackLikelyToKeepUp"];
-    [_playerLayer removeObserver:self forKeyPath:@"isReadyForDisplay"];
+    [_playerLayer removeObserver:self forKeyPath:@"readyForDisplay"];
   [_player removeObserver:self forKeyPath:@"rate"];
 }
 
