@@ -35,7 +35,7 @@ dependencies:
     git: 
       url: https://github.com/Ahlisen/packages
       path: packages/video_player/video_player_avfoundation
-      ref: c8c3619659038a2316f561a0ba16000c93083335
+      ref: e787f58550737286d72719ac9cead7648f1faf5e
   video_player_platform_interface:
     git: 
       url: https://github.com/Ahlisen/packages
