@@ -349,7 +349,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
 
   /// The URI to the video file. This will be in different formats depending on
   /// the [DataSourceType] of the original video.
-  final String dataSource;
+  String dataSource;
 
   /// HTTP headers used for the request to the [dataSource].
   /// Only for [VideoPlayerController.network].
@@ -569,6 +569,8 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
       formatHint: formatHint,
       httpHeaders: httpHeaders,
     );
+
+    this.dataSource = dataSource.toString();
 
     await _videoPlayerPlatform.load(_textureId, dataSourceDescription);
   }

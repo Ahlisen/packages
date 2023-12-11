@@ -230,10 +230,12 @@ class _BumbleBeeRemoteVideoState extends State<_BumbleBeeRemoteVideo> {
     );
 
     _controller.addListener(() {
+      print('FOO $_controller');
+      print('FOO dataSource: ${_controller.dataSource}');
       setState(() {});
     });
     _controller.setLooping(true);
-    _controller.initialize();
+    _controller.initialize().then((_) => setState(() {}));
   }
 
   @override
