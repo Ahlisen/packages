@@ -340,7 +340,7 @@ NS_INLINE CGFloat radiansToDegrees(CGFloat radians) {
   frameUpdater.videoOutput = _videoOutput;
 #if TARGET_OS_IOS
   // See TODO on this property in FVPFrameUpdater.
-  frameUpdater.skipBufferAvailabilityCheck = YES;
+  frameUpdater.skipBufferAvailabilityCheck = NO;
 #endif
 
   [self addObserversForItem:item player:_player];
