@@ -340,7 +340,7 @@ NS_INLINE CGFloat radiansToDegrees(CGFloat radians) {
   frameUpdater.videoOutput = _videoOutput;
 #if TARGET_OS_IOS
   // See TODO on this property in FVPFrameUpdater.
-  frameUpdater.skipBufferAvailabilityCheck = NO;
+  frameUpdater.skipBufferAvailabilityCheck = YES;
 #endif
 
   [self addObserversForItem:item player:_player];
@@ -382,6 +382,12 @@ NS_INLINE CGFloat radiansToDegrees(CGFloat radians) {
         [item addOutput:_videoOutput];
         [self setupEventSinkIfReadyToPlay];
         [self updatePlayingState];
+            if (_loadingNewAsset) {
+                self.waitingForFrame = YES;
+                self.displayLink.running = YES;
+                _loadingNewAsset = NO;
+            }
+
 //        _eventSink(@{@"event" : @"reloadingEnd"});
         break;
     }
@@ -549,6 +555,9 @@ NS_INLINE CGFloat radiansToDegrees(CGFloat radians) {
     if ([headers count] != 0) {
       options = @{@"AVURLAssetHTTPHeaderFieldsKey" : headers};
     }
+    AVPlayerItem *previousItem = _player.currentItem;
+    [previousItem removeOutput:_videoOutput];
+
     AVURLAsset *urlAsset = [AVURLAsset URLAssetWithURL:url options:options];
     AVPlayerItem *item = [AVPlayerItem playerItemWithAsset:urlAsset];
     //_displayLink.running = NO;
@@ -571,9 +580,8 @@ NS_INLINE CGFloat radiansToDegrees(CGFloat radians) {
 
     [self addObserversForItem:item player:_player];
 
-//    self.loadingNewAsset = YES;
-    self.waitingForFrame = YES;
-    self.displayLink.running = YES;
+    self.loadingNewAsset = YES;
+
 }
 
 - (void)setPlaybackSpeed:(double)speed {
