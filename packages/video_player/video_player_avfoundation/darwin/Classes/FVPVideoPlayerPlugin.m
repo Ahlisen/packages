@@ -572,8 +572,8 @@ NS_INLINE CGFloat radiansToDegrees(CGFloat radians) {
     [self addObserversForItem:item player:_player];
 
 //    self.loadingNewAsset = YES;
-//    self.waitingForFrame = YES;
-//    self.displayLink.running = YES;
+    self.waitingForFrame = YES;
+    self.displayLink.running = YES;
 }
 
 - (void)setPlaybackSpeed:(double)speed {
