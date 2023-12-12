@@ -343,6 +343,7 @@ NS_INLINE CGFloat radiansToDegrees(CGFloat radians) {
   };
   _videoOutput = [avFactory videoOutputWithPixelBufferAttributes:pixBuffAttributes];
   frameUpdater.videoOutput = _videoOutput;
+
 #if TARGET_OS_IOS
   // See TODO on this property in FVPFrameUpdater.
   frameUpdater.skipBufferAvailabilityCheck = YES;
@@ -443,6 +444,13 @@ NS_INLINE CGFloat radiansToDegrees(CGFloat radians) {
       _eventSink(@{@"event" : @"reloadingEnd"});
     }
   }
+}
+#pragma mark - AVPlayerItemOutputPullDelegate
+- (void)outputMediaDataWillChange:(AVPlayerItemOutput *)sender
+{
+    // Restart display link.
+    //[[self displayLink] setPaused:NO];
+    printf("Delegate outputMediaDataWillChange\n");
 }
 
 - (void)updatePlayingState {
@@ -568,6 +576,9 @@ NS_INLINE CGFloat radiansToDegrees(CGFloat radians) {
 # define ONE_FRAME_DURATION 0.03
 
 - (void)loadAsset:(NSURL *)url httpHeaders:(nonnull NSDictionary<NSString *, NSString *> *)headers {
+//    __weak FVPVideoPlayer *weakSelf = self;
+//    [_videoOutput setDelegate:weakSelf queue:nil];
+
     NSDictionary<NSString *, id> *options = nil;
     if ([headers count] != 0) {
       options = @{@"AVURLAssetHTTPHeaderFieldsKey" : headers};
