@@ -43,6 +43,7 @@
 
 - (void)displayLinkFired {
   // Only report a new frame if one is actually available, or the check is being skipped.
+    printf("displayLinkFired\n");
   BOOL reportFrame = NO;
   if (self.skipBufferAvailabilityCheck) {
     reportFrame = YES;
@@ -53,7 +54,9 @@
       reportFrame = YES;
     }
   }
+
   if (reportFrame) {
+      printf("displayLinkFired + frame reported\n");
     [_registry textureFrameAvailable:_textureId];
   }
 }
@@ -310,6 +313,8 @@ NS_INLINE CGFloat radiansToDegrees(CGFloat radians) {
                 [self getVideoCompositionWithTransform:self->_preferredTransform
                                              withAsset:asset
                                         withVideoTrack:videoTrack];
+
+              printf("new videoComposition\n");
             item.videoComposition = videoComposition;
           }
         };
@@ -381,24 +386,25 @@ NS_INLINE CGFloat radiansToDegrees(CGFloat radians) {
       case AVPlayerItemStatusReadyToPlay:
         [item addOutput:_videoOutput];
         [self setupEventSinkIfReadyToPlay];
-        [self updatePlayingState];
-            if (_loadingNewAsset) {
-                self.waitingForFrame = YES;
-                self.displayLink.running = YES;
-                _loadingNewAsset = NO;
-            }
-
+        //[self updatePlayingState];
+            printf("Ready to play\n");
+//            AVVideoComposition* bob = [[[_player currentItem] videoComposition] mutableCopy];
+//            [[_player currentItem] setVideoComposition:bob];
 //        _eventSink(@{@"event" : @"reloadingEnd"});
         break;
     }
   } else if (context == presentationSizeContext || context == durationContext) {
     AVPlayerItem *item = (AVPlayerItem *)object;
     if (item.status == AVPlayerItemStatusReadyToPlay) {
+        printf("Ready to play presentation duration\n");
       // Due to an apparent bug, when the player item is ready, it still may not have determined
       // its presentation size or duration. When these properties are finally set, re-check if
       // all required properties and instantiate the event sink if it is not already set up.
+
       [self setupEventSinkIfReadyToPlay];
       [self updatePlayingState];
+//        AVVideoComposition* bob = [[[_player currentItem] videoComposition] mutableCopy];
+//        [[_player currentItem] setVideoComposition:bob];
     }
   } else if (context == playbackLikelyToKeepUpContext) {
     [self updatePlayingState];
@@ -420,10 +426,19 @@ NS_INLINE CGFloat radiansToDegrees(CGFloat radians) {
           @{@"event" : @"isPlayingStateUpdate", @"isPlaying" : player.rate > 0 ? @YES : @NO});
     }
   } else if (context == isReadyToDisplayContext) {
-    // Important: Make sure to cast the object to AVPlayer when observing the rate property,
-    // as it is not available in AVPlayerItem.
-    // AVPlayer *player = (AVPlayer *)object;
       AVPlayerLayer *playerLayer = (AVPlayerLayer *)object;
+      printf("isReadyForDisplay %d\n", playerLayer.isReadyForDisplay);
+      if (playerLayer.isReadyForDisplay) {
+                self.waitingForFrame = YES;
+          __weak FVPVideoPlayer *weakSelf = self;
+          dispatch_async(dispatch_get_main_queue(), ^{
+              weakSelf.displayLink.running = YES;
+//              AVVideoComposition* bob = [[[_player currentItem] videoComposition] mutableCopy];
+//              [[_player currentItem] setVideoComposition:bob];
+
+          });
+      }
+
     if (_eventSink != nil && playerLayer.isReadyForDisplay) {
       _eventSink(@{@"event" : @"reloadingEnd"});
     }
@@ -550,6 +565,8 @@ NS_INLINE CGFloat radiansToDegrees(CGFloat radians) {
   _player.volume = (float)((volume < 0.0) ? 0.0 : ((volume > 1.0) ? 1.0 : volume));
 }
 
+# define ONE_FRAME_DURATION 0.03
+
 - (void)loadAsset:(NSURL *)url httpHeaders:(nonnull NSDictionary<NSString *, NSString *> *)headers {
     NSDictionary<NSString *, id> *options = nil;
     if ([headers count] != 0) {
@@ -557,12 +574,33 @@ NS_INLINE CGFloat radiansToDegrees(CGFloat radians) {
     }
     AVPlayerItem *previousItem = _player.currentItem;
     [previousItem removeOutput:_videoOutput];
+    _frameUpdater.lastKnownAvailableTime = kCMTimeInvalid;
 
     AVURLAsset *urlAsset = [AVURLAsset URLAssetWithURL:url options:options];
+    //[_player setRate:0.0f]
     AVPlayerItem *item = [AVPlayerItem playerItemWithAsset:urlAsset];
-    //_displayLink.running = NO;
+
+
+    _displayLink.running = NO;
     [self removeKeyValueObservers];
-    [_player replaceCurrentItemWithPlayerItem: item];
+    printf("LoadAsset\n");
+
+//    _player = [_player initWithPlayerItem: item];
+    [item addOutput:_videoOutput];
+    [_player replaceCurrentItemWithPlayerItem:item];
+    [self addObserversForItem:item player:_player];
+    [_videoOutput requestNotificationOfMediaDataChangeWithAdvanceInterval:ONE_FRAME_DURATION];
+
+
+//    NSTimeInterval delayInSeconds = 0.1;
+//    dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delayInSeconds * NSEC_PER_SEC));
+//    dispatch_after(popTime, dispatch_get_main_queue(), ^(void){
+//      NSLog(@"Do some work");
+//
+//    });
+//    NSLog(@"Do some work 2");
+
+    //[_player seekToTime:kCMTimeZero];
 
 //    _isInitialized = NO;
 //    int64_t duration = 0;
@@ -578,7 +616,7 @@ NS_INLINE CGFloat radiansToDegrees(CGFloat radians) {
         _eventSink(@{@"event" : @"reloadingStart"});
     }
 
-    [self addObserversForItem:item player:_player];
+
 
     self.loadingNewAsset = YES;
 
@@ -609,11 +647,14 @@ NS_INLINE CGFloat radiansToDegrees(CGFloat radians) {
 }
 
 - (CVPixelBufferRef)copyPixelBuffer {
+    //printf("copyPixelBuffer\n");
   CVPixelBufferRef buffer = NULL;
   CMTime outputItemTime = [_videoOutput itemTimeForHostTime:CACurrentMediaTime()];
   if ([_videoOutput hasNewPixelBufferForItemTime:outputItemTime]) {
+      printf("copyPixelBuffer has new pixels\n");
     buffer = [_videoOutput copyPixelBufferForItemTime:outputItemTime itemTimeForDisplay:NULL];
   } else {
+      printf("copyPixelBuffer reuse old pixels\n");
     // If the current time isn't available yet, use the time that was checked when informing the
     // engine that a frame was available (if any).
     CMTime lastAvailableTime = self.frameUpdater.lastKnownAvailableTime;

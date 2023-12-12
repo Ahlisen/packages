@@ -230,12 +230,12 @@ class _BumbleBeeRemoteVideoState extends State<_BumbleBeeRemoteVideo> {
     );
 
     _controller.addListener(() {
-      print('FOO $_controller');
-      print('FOO dataSource: ${_controller.dataSource}');
+      // print('FOO $_controller');
+      // print('FOO dataSource: ${_controller.dataSource}');
       setState(() {});
     });
     _controller.setLooping(true);
-    _controller.initialize().then((_) => setState(() {}));
+    _controller.initialize();//.then((_) => setState(() {}));
   }
 
   @override
@@ -269,6 +269,9 @@ class _BumbleBeeRemoteVideoState extends State<_BumbleBeeRemoteVideo> {
           TextButton(onPressed: () {
             _controller.loadAsset(Uri.parse('https://flutter.github.io/assets-for-api-docs/assets/videos/butterfly.mp4'));
           }, child: const Text('Load butterfly')),
+          TextButton(onPressed: () {
+            _controller.loadAsset(Uri.parse('https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4'));
+          }, child: const Text('Load game of thrones')),
           TextButton(onPressed: () {
             _controller.loadAsset(Uri.parse('https://flutter.github.io/assets-for-api-docs/assets/videos/bee.mp4'));
           }, child: const Text('Load bee')),
