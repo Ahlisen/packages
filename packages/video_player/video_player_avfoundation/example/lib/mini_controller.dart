@@ -274,10 +274,14 @@ class MiniController extends ValueNotifier<VideoPlayerValue> {
           value = value.copyWith(isBuffering: false);
           break;
         case VideoEventType.reloadingStart:
-          value = value.copyWith(isInitialized: true);
+          value = value.copyWith(isInitialized: false);
           break;
         case VideoEventType.reloadingEnd:
-          value = value.copyWith(isInitialized: false);
+          value = value.copyWith(
+            isInitialized: true,
+            duration: event.duration,
+            size: event.size,
+          );
           break;
         case VideoEventType.isPlayingStateUpdate:
           value = value.copyWith(isPlaying: event.isPlaying);

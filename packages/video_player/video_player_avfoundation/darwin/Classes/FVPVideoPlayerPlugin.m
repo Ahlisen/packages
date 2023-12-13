@@ -426,29 +426,19 @@ NS_INLINE CGFloat radiansToDegrees(CGFloat radians) {
   } else if (context == isReadyToDisplayContext) {
       AVPlayerLayer *playerLayer = (AVPlayerLayer *)object;
       printf("isReadyForDisplay %d\n", playerLayer.isReadyForDisplay);
-      if (playerLayer.isReadyForDisplay) {
 
-
-          printf("Ready to display %f \n", CACurrentMediaTime() - self.startTime);
-//                self.waitingForFrame = YES;
-//
-//          __weak FVPVideoPlayer *weakSelf = self;
-          //[_videoOutput requestNotificationOfMediaDataChangeWithAdvanceInterval:ONE_FRAME_DURATION];
-//
-//          dispatch_async(dispatch_get_main_queue(), ^{
-//              weakSelf.displayLink.running = YES;
-//
-////              AVVideoComposition* bob = [[[_player currentItem] videoComposition] mutableCopy];
-////              [[_player currentItem] setVideoComposition:bob];
-//
-//          });
-      }
-
+      // Thought: Should this be skipped on initial player created video?
       if (_eventSink != nil && playerLayer.isReadyForDisplay) {
+          AVPlayerItem *currentItem = self.player.currentItem;
+          CGSize size = currentItem.presentationSize;
+          CGFloat width = size.width;
+          CGFloat height = size.height;
           int64_t duration = [self duration];
           _eventSink(@{
             @"event" : @"reloadingEnd",
-            @"duration" : @(duration)
+            @"duration" : @(duration),
+            @"width" : @(width),
+            @"height" : @(height)
           });
       }
   }
