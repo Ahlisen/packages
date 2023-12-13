@@ -479,7 +479,7 @@ NS_INLINE CGFloat radiansToDegrees(CGFloat radians) {
 }
 
 - (void)updatePlayingState {
-  if (!_isInitialized || !_loadingNewAsset) {
+  if (!_isInitialized || _loadingNewAsset) {
     return;
   }
   if (_isPlaying) {
