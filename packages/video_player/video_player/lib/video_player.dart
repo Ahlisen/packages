@@ -930,7 +930,7 @@ class VideoProgressColors {
   /// size of the video compared to either of those values.
   const VideoProgressColors({
     this.playedColor = const Color.fromRGBO(255, 0, 0, 0.7),
-    this.bufferedColor = const Color.fromRGBO(50, 50, 200, 0.2),
+    this.bufferedColor = const Color.fromRGBO(50, 50, 200, 0.7),
     this.backgroundColor = const Color.fromRGBO(200, 200, 200, 0.5),
   });
 

@@ -16,6 +16,9 @@
 #error Code Requires ARC.
 #endif
 
+# define ONE_FRAME_DURATION 0.03
+# define TWO_FRAME_DURATION 0.06
+
 @interface FVPFrameUpdater : NSObject
 @property(nonatomic) int64_t textureId;
 @property(nonatomic, weak, readonly) NSObject<FlutterTextureRegistry> *registry;
@@ -89,7 +92,7 @@
 
 #pragma mark -
 
-@interface FVPVideoPlayer ()
+@interface FVPVideoPlayer () <AVPlayerItemOutputPullDelegate>
 @property(readonly, nonatomic) AVPlayerItemVideoOutput *videoOutput;
 // The plugin registrar, to obtain view information from.
 @property(nonatomic, weak) NSObject<FlutterPluginRegistrar> *registrar;
@@ -112,6 +115,7 @@
 @property(nonatomic, assign) BOOL waitingForFrame;
 
 @property(nonatomic, assign) BOOL loadingNewAsset;
+@property(nonatomic, assign) double startTime;
 
 - (instancetype)initWithURL:(NSURL *)url
                frameUpdater:(FVPFrameUpdater *)frameUpdater
@@ -387,8 +391,9 @@ NS_INLINE CGFloat radiansToDegrees(CGFloat radians) {
       case AVPlayerItemStatusReadyToPlay:
         [item addOutput:_videoOutput];
         [self setupEventSinkIfReadyToPlay];
-        //[self updatePlayingState];
-            printf("Ready to play\n");
+        [self updatePlayingState];
+            printf("Ready to play %f \n", CACurrentMediaTime() - self.startTime);
+
 //            AVVideoComposition* bob = [[[_player currentItem] videoComposition] mutableCopy];
 //            [[_player currentItem] setVideoComposition:bob];
 //        _eventSink(@{@"event" : @"reloadingEnd"});
@@ -430,14 +435,21 @@ NS_INLINE CGFloat radiansToDegrees(CGFloat radians) {
       AVPlayerLayer *playerLayer = (AVPlayerLayer *)object;
       printf("isReadyForDisplay %d\n", playerLayer.isReadyForDisplay);
       if (playerLayer.isReadyForDisplay) {
-                self.waitingForFrame = YES;
-          __weak FVPVideoPlayer *weakSelf = self;
-          dispatch_async(dispatch_get_main_queue(), ^{
-              weakSelf.displayLink.running = YES;
-//              AVVideoComposition* bob = [[[_player currentItem] videoComposition] mutableCopy];
-//              [[_player currentItem] setVideoComposition:bob];
 
-          });
+
+          printf("Ready to display %f \n", CACurrentMediaTime() - self.startTime);
+//                self.waitingForFrame = YES;
+//
+//          __weak FVPVideoPlayer *weakSelf = self;
+          //[_videoOutput requestNotificationOfMediaDataChangeWithAdvanceInterval:ONE_FRAME_DURATION];
+//
+//          dispatch_async(dispatch_get_main_queue(), ^{
+//              weakSelf.displayLink.running = YES;
+//
+////              AVVideoComposition* bob = [[[_player currentItem] videoComposition] mutableCopy];
+////              [[_player currentItem] setVideoComposition:bob];
+//
+//          });
       }
 
     if (_eventSink != nil && playerLayer.isReadyForDisplay) {
@@ -448,13 +460,26 @@ NS_INLINE CGFloat radiansToDegrees(CGFloat radians) {
 #pragma mark - AVPlayerItemOutputPullDelegate
 - (void)outputMediaDataWillChange:(AVPlayerItemOutput *)sender
 {
-    // Restart display link.
-    //[[self displayLink] setPaused:NO];
+    self.waitingForFrame = YES;
+
+    NSTimeInterval delayInSeconds = 0.05;
+    dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delayInSeconds * NSEC_PER_SEC));
+    __weak FVPVideoPlayer *weakSelf = self;
+    dispatch_after(popTime, dispatch_get_main_queue(), ^(void){
+      NSLog(@"Do some work");
+        weakSelf.displayLink.running = YES;
+        weakSelf.loadingNewAsset = NO;
+    });
+
     printf("Delegate outputMediaDataWillChange\n");
 }
 
+- (void)outputSequenceWasFlushed:(AVPlayerItemOutput *)sender {
+    printf("Delegate outputSequenceWasFlushed\n");
+}
+
 - (void)updatePlayingState {
-  if (!_isInitialized) {
+  if (!_isInitialized || !_loadingNewAsset) {
     return;
   }
   if (_isPlaying) {
@@ -573,11 +598,30 @@ NS_INLINE CGFloat radiansToDegrees(CGFloat radians) {
   _player.volume = (float)((volume < 0.0) ? 0.0 : ((volume > 1.0) ? 1.0 : volume));
 }
 
-# define ONE_FRAME_DURATION 0.03
+
 
 - (void)loadAsset:(NSURL *)url httpHeaders:(nonnull NSDictionary<NSString *, NSString *> *)headers {
+
+    if (_loadingNewAsset) {
+        printf("BLOCKED\n");
+
+        if (_player.rate == 0) {
+            NSTimeInterval delayInSeconds = 1;
+            dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delayInSeconds * NSEC_PER_SEC));
+            dispatch_after(popTime, dispatch_get_main_queue(), ^(void){
+                NSLog(@"Do some work");
+                [self loadAsset:url httpHeaders:headers];
+            });
+        }
+
+        return;
+    }
+
+    _loadingNewAsset = YES;
 //    __weak FVPVideoPlayer *weakSelf = self;
-//    [_videoOutput setDelegate:weakSelf queue:nil];
+    self.startTime = CACurrentMediaTime();
+
+    [_videoOutput setDelegate:self queue:nil];
 
     NSDictionary<NSString *, id> *options = nil;
     if ([headers count] != 0) {
@@ -585,14 +629,14 @@ NS_INLINE CGFloat radiansToDegrees(CGFloat radians) {
     }
     AVPlayerItem *previousItem = _player.currentItem;
     [previousItem removeOutput:_videoOutput];
-    _frameUpdater.lastKnownAvailableTime = kCMTimeInvalid;
+    _frameUpdater.lastKnownAvailableTime = kCMTimeInvalid; // Skippas på ios
 
     AVURLAsset *urlAsset = [AVURLAsset URLAssetWithURL:url options:options];
     //[_player setRate:0.0f]
     AVPlayerItem *item = [AVPlayerItem playerItemWithAsset:urlAsset];
 
-
     _displayLink.running = NO;
+
     [self removeKeyValueObservers];
     printf("LoadAsset\n");
 
@@ -611,6 +655,40 @@ NS_INLINE CGFloat radiansToDegrees(CGFloat radians) {
 //    });
 //    NSLog(@"Do some work 2");
 
+    // TODO: KEEP THIS AND SEND TO FLUTTER
+//    AVAsset *asset = [item asset];
+//    void (^assetCompletionHandler)(void) = ^{
+//      if ([asset statusOfValueForKey:@"tracks" error:nil] == AVKeyValueStatusLoaded) {
+//        NSArray *tracks = [asset tracksWithMediaType:AVMediaTypeVideo];
+//        if ([tracks count] > 0) {
+//          AVAssetTrack *videoTrack = tracks[0];
+//          void (^trackCompletionHandler)(void) = ^{
+//            if (self->_disposed) return;
+//            if ([videoTrack statusOfValueForKey:@"preferredTransform"
+//                                          error:nil] == AVKeyValueStatusLoaded) {
+//              // Rotate the video by using a videoComposition and the preferredTransform
+//              self->_preferredTransform = FVPGetStandardizedTransformForTrack(videoTrack);
+//              // Note:
+//              // https://developer.apple.com/documentation/avfoundation/avplayeritem/1388818-videocomposition
+//              // Video composition can only be used with file-based media and is not supported for
+//              // use with media served using HTTP Live Streaming.
+//              AVMutableVideoComposition *videoComposition =
+//                  [self getVideoCompositionWithTransform:self->_preferredTransform
+//                                               withAsset:asset
+//                                          withVideoTrack:videoTrack];
+//
+//                printf("new videoComposition\n");
+//              item.videoComposition = videoComposition;
+//            }
+//          };
+//          [videoTrack loadValuesAsynchronouslyForKeys:@[ @"preferredTransform" ]
+//                                    completionHandler:trackCompletionHandler];
+//        }
+//      }
+//    };
+//    [asset loadValuesAsynchronouslyForKeys:@[ @"tracks" ] completionHandler:assetCompletionHandler];
+
+    // TODO: KEEP THIS AND SEND TO FLUTTER END
     //[_player seekToTime:kCMTimeZero];
 
 //    _isInitialized = NO;
@@ -623,13 +701,13 @@ NS_INLINE CGFloat radiansToDegrees(CGFloat radians) {
 //      @"height" : @(noSize)
 //    });
 
+
+
     if (_eventSink != nil){
         _eventSink(@{@"event" : @"reloadingStart"});
     }
 
 
-
-    self.loadingNewAsset = YES;
 
 }
 
@@ -727,6 +805,7 @@ NS_INLINE CGFloat radiansToDegrees(CGFloat radians) {
     return;
   }
 
+    [_videoOutput setDelegate:nil queue:nil];
   _disposed = YES;
   [_playerLayer removeFromSuperlayer];
   _displayLink = nil;
