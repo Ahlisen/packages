@@ -392,25 +392,17 @@ NS_INLINE CGFloat radiansToDegrees(CGFloat radians) {
         [item addOutput:_videoOutput];
         [self setupEventSinkIfReadyToPlay];
         [self updatePlayingState];
-            printf("Ready to play %f \n", CACurrentMediaTime() - self.startTime);
-
-//            AVVideoComposition* bob = [[[_player currentItem] videoComposition] mutableCopy];
-//            [[_player currentItem] setVideoComposition:bob];
-//        _eventSink(@{@"event" : @"reloadingEnd"});
         break;
     }
   } else if (context == presentationSizeContext || context == durationContext) {
     AVPlayerItem *item = (AVPlayerItem *)object;
     if (item.status == AVPlayerItemStatusReadyToPlay) {
-        printf("Ready to play presentation duration\n");
       // Due to an apparent bug, when the player item is ready, it still may not have determined
       // its presentation size or duration. When these properties are finally set, re-check if
       // all required properties and instantiate the event sink if it is not already set up.
 
       [self setupEventSinkIfReadyToPlay];
       [self updatePlayingState];
-//        AVVideoComposition* bob = [[[_player currentItem] videoComposition] mutableCopy];
-//        [[_player currentItem] setVideoComposition:bob];
     }
   } else if (context == playbackLikelyToKeepUpContext) {
     [self updatePlayingState];
@@ -452,9 +444,13 @@ NS_INLINE CGFloat radiansToDegrees(CGFloat radians) {
 //          });
       }
 
-    if (_eventSink != nil && playerLayer.isReadyForDisplay) {
-      _eventSink(@{@"event" : @"reloadingEnd"});
-    }
+      if (_eventSink != nil && playerLayer.isReadyForDisplay) {
+          int64_t duration = [self duration];
+          _eventSink(@{
+            @"event" : @"reloadingEnd",
+            @"duration" : @(duration)
+          });
+      }
   }
 }
 #pragma mark - AVPlayerItemOutputPullDelegate
@@ -706,9 +702,6 @@ NS_INLINE CGFloat radiansToDegrees(CGFloat radians) {
     if (_eventSink != nil){
         _eventSink(@{@"event" : @"reloadingStart"});
     }
-
-
-
 }
 
 - (void)setPlaybackSpeed:(double)speed {
@@ -754,11 +747,6 @@ NS_INLINE CGFloat radiansToDegrees(CGFloat radians) {
 
   if (self.waitingForFrame && buffer) {
     self.waitingForFrame = NO;
-
-//      if (self.loadingNewAsset && _eventSink != nil) {
-//          _eventSink(@{@"event" : @"reloadingEnd"});
-//          self.loadingNewAsset = NO;
-//      }
 
     // If the display link was only running temporarily to pick up a new frame while the video was
     // paused, stop it again.

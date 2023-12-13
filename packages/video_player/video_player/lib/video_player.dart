@@ -491,7 +491,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
           value = value.copyWith(isReadyToDisplay: false);
           break;
         case VideoEventType.reloadingEnd:
-          value = value.copyWith(isReadyToDisplay: true);
+          value = value.copyWith(isReadyToDisplay: true, duration: event.duration);
           break;
         case VideoEventType.isPlayingStateUpdate:
           if (event.isPlaying ?? false) {

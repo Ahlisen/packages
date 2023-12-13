@@ -230,7 +230,7 @@ class VideoEvent {
 
   /// Duration of the video.
   ///
-  /// Only used if [eventType] is [VideoEventType.initialized].
+  /// Only used if [eventType] is [VideoEventType.initialized] or [VideoEventType.reloadingEnd].
   final Duration? duration;
 
   /// Size of the video.
@@ -297,8 +297,10 @@ enum VideoEventType {
   /// The video stopped to buffer.
   bufferingEnd,
 
-  /// Adding a new item to player
+  /// Start replacing a new item on player.
   reloadingStart,
+
+  /// Done replacing new item on player.
   reloadingEnd,
 
   /// The playback state of the video has changed.
