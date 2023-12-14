@@ -59,6 +59,8 @@ final class VideoPlayer {
   private static final String USER_AGENT = "User-Agent";
 
   @VisibleForTesting boolean isInitialized = false;
+  
+  private boolean isLoadingNewAsset = false;
 
   private final VideoPlayerOptions options;
 
@@ -213,6 +215,11 @@ final class VideoPlayer {
                 isInitialized = true;
                 sendInitialized();
               }
+
+              if (isLoadingNewAsset) {
+                isLoadingNewAsset = false;
+                sendReloadingEnd();
+              }
             } else if (playbackState == Player.STATE_ENDED) {
               Map<String, Object> event = new HashMap<>();
               event.put("event", "completed");
@@ -273,6 +280,12 @@ final class VideoPlayer {
 
     exoPlayer.setMediaSource(mediaSource);
     exoPlayer.prepare();
+
+    isLoadingNewAsset = true;
+
+    Map<String, Object> event = new HashMap<>();
+    event.put("event", "reloadingStart");
+    eventSink.success(event);
   }
 
   void play() {
@@ -314,6 +327,39 @@ final class VideoPlayer {
     if (isInitialized) {
       Map<String, Object> event = new HashMap<>();
       event.put("event", "initialized");
+      event.put("duration", exoPlayer.getDuration());
+
+      if (exoPlayer.getVideoFormat() != null) {
+        Format videoFormat = exoPlayer.getVideoFormat();
+        int width = videoFormat.width;
+        int height = videoFormat.height;
+        int rotationDegrees = videoFormat.rotationDegrees;
+        // Switch the width/height if video was taken in portrait mode
+        if (rotationDegrees == 90 || rotationDegrees == 270) {
+          width = exoPlayer.getVideoFormat().height;
+          height = exoPlayer.getVideoFormat().width;
+        }
+        event.put("width", width);
+        event.put("height", height);
+
+        // Rotating the video with ExoPlayer does not seem to be possible with a Surface,
+        // so inform the Flutter code that the widget needs to be rotated to prevent
+        // upside-down playback for videos with rotationDegrees of 180 (other orientations work
+        // correctly without correction).
+        if (rotationDegrees == 180) {
+          event.put("rotationCorrection", rotationDegrees);
+        }
+      }
+
+      eventSink.success(event);
+    }
+  }
+
+  // Almost copy of sendInitialized
+  void sendReloadingEnd() {
+    if (!isLoadingNewAsset) {
+      Map<String, Object> event = new HashMap<>();
+      event.put("event", "reloadingEnd");
       event.put("duration", exoPlayer.getDuration());
 
       if (exoPlayer.getVideoFormat() != null) {

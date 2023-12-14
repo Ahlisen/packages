@@ -185,6 +185,15 @@ class AndroidVideoPlayer extends VideoPlayerPlatform {
           return VideoEvent(eventType: VideoEventType.bufferingStart);
         case 'bufferingEnd':
           return VideoEvent(eventType: VideoEventType.bufferingEnd);
+        case 'reloadingStart':
+          return VideoEvent(eventType: VideoEventType.reloadingStart);
+        case 'reloadingEnd':
+          return VideoEvent(
+              eventType: VideoEventType.reloadingEnd,
+              duration: Duration(milliseconds: map['duration'] as int),
+              size: Size((map['width'] as num?)?.toDouble() ?? 0.0,
+              (map['height'] as num?)?.toDouble() ?? 0.0),
+             );
         case 'isPlayingStateUpdate':
           return VideoEvent(
             eventType: VideoEventType.isPlayingStateUpdate,
