@@ -46,7 +46,7 @@
 
 - (void)displayLinkFired {
   // Only report a new frame if one is actually available, or the check is being skipped.
-    printf("displayLinkFired\n");
+    //printf("displayLinkFired\n");
   BOOL reportFrame = NO;
   if (self.skipBufferAvailabilityCheck) {
     reportFrame = YES;
@@ -59,7 +59,7 @@
   }
 
   if (reportFrame) {
-      printf("displayLinkFired + frame reported\n");
+      //printf("displayLinkFired + frame reported\n");
     [_registry textureFrameAvailable:_textureId];
   }
 }
@@ -391,6 +391,7 @@ NS_INLINE CGFloat radiansToDegrees(CGFloat radians) {
       case AVPlayerItemStatusReadyToPlay:
         [item addOutput:_videoOutput];
         [self setupEventSinkIfReadyToPlay];
+        [self finishLoadingNewAssetIfAble];
         [self updatePlayingState];
         break;
     }
@@ -401,8 +402,9 @@ NS_INLINE CGFloat radiansToDegrees(CGFloat radians) {
       // its presentation size or duration. When these properties are finally set, re-check if
       // all required properties and instantiate the event sink if it is not already set up.
 
-      [self setupEventSinkIfReadyToPlay];
-      [self updatePlayingState];
+        [self setupEventSinkIfReadyToPlay];
+        [self finishLoadingNewAssetIfAble];
+        [self updatePlayingState];
     }
   } else if (context == playbackLikelyToKeepUpContext) {
     [self updatePlayingState];
@@ -427,19 +429,8 @@ NS_INLINE CGFloat radiansToDegrees(CGFloat radians) {
       AVPlayerLayer *playerLayer = (AVPlayerLayer *)object;
       printf("isReadyForDisplay %d\n", playerLayer.isReadyForDisplay);
 
-      // Thought: Should this be skipped on initial player created video?
-      if (_eventSink != nil && playerLayer.isReadyForDisplay) {
-          AVPlayerItem *currentItem = self.player.currentItem;
-          CGSize size = currentItem.presentationSize;
-          CGFloat width = size.width;
-          CGFloat height = size.height;
-          int64_t duration = [self duration];
-          _eventSink(@{
-            @"event" : @"reloadingEnd",
-            @"duration" : @(duration),
-            @"width" : @(width),
-            @"height" : @(height)
-          });
+      if (playerLayer.isReadyForDisplay) {
+          [self finishLoadingNewAssetIfAble];
       }
   }
 }
@@ -452,9 +443,8 @@ NS_INLINE CGFloat radiansToDegrees(CGFloat radians) {
     dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delayInSeconds * NSEC_PER_SEC));
     __weak FVPVideoPlayer *weakSelf = self;
     dispatch_after(popTime, dispatch_get_main_queue(), ^(void){
-      NSLog(@"Do some work");
         weakSelf.displayLink.running = YES;
-        weakSelf.loadingNewAsset = NO;
+        //weakSelf.loadingNewAsset = NO;
     });
 
     printf("Delegate outputMediaDataWillChange\n");
@@ -519,6 +509,36 @@ NS_INLINE CGFloat radiansToDegrees(CGFloat radians) {
     _isInitialized = YES;
     _eventSink(@{
       @"event" : @"initialized",
+      @"duration" : @(duration),
+      @"width" : @(width),
+      @"height" : @(height)
+    });
+  }
+}
+
+- (void)finishLoadingNewAssetIfAble {
+  if (_eventSink && _isInitialized && _loadingNewAsset) {
+    AVPlayerItem *currentItem = self.player.currentItem;
+    CGSize size = currentItem.presentationSize;
+    CGFloat width = size.width;
+    CGFloat height = size.height;
+
+    // The player has not yet initialized when it has no size, unless it is an audio-only track.
+    // HLS m3u8 video files never load any tracks, and are also not yet initialized until they have
+    // a size.
+    if (height == CGSizeZero.height &&
+        width == CGSizeZero.width) {
+      return;
+    }
+    // The player may be initialized but still needs to determine the duration.
+    int64_t duration = [self duration];
+    if (duration == 0) {
+      return;
+    }
+
+    _loadingNewAsset = NO;
+    _eventSink(@{
+      @"event" : @"reloadingEnd",
       @"duration" : @(duration),
       @"width" : @(width),
       @"height" : @(height)
@@ -591,14 +611,14 @@ NS_INLINE CGFloat radiansToDegrees(CGFloat radians) {
     if (_loadingNewAsset) {
         printf("BLOCKED\n");
 
-        if (_player.rate == 0) {
-            NSTimeInterval delayInSeconds = 1;
-            dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delayInSeconds * NSEC_PER_SEC));
-            dispatch_after(popTime, dispatch_get_main_queue(), ^(void){
-                NSLog(@"Do some work");
-                [self loadAsset:url httpHeaders:headers];
-            });
-        }
+//        if (_player.rate == 0) {
+//            NSTimeInterval delayInSeconds = 1;
+//            dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delayInSeconds * NSEC_PER_SEC));
+//            dispatch_after(popTime, dispatch_get_main_queue(), ^(void){
+//                NSLog(@"Do some work");
+//                [self loadAsset:url httpHeaders:headers];
+//            });
+//        }
 
         return;
     }
@@ -723,10 +743,10 @@ NS_INLINE CGFloat radiansToDegrees(CGFloat radians) {
   CVPixelBufferRef buffer = NULL;
   CMTime outputItemTime = [_videoOutput itemTimeForHostTime:CACurrentMediaTime()];
   if ([_videoOutput hasNewPixelBufferForItemTime:outputItemTime]) {
-      printf("copyPixelBuffer has new pixels\n");
+      //printf("copyPixelBuffer has new pixels\n");
     buffer = [_videoOutput copyPixelBufferForItemTime:outputItemTime itemTimeForDisplay:NULL];
   } else {
-      printf("copyPixelBuffer reuse old pixels\n");
+      //printf("copyPixelBuffer reuse old pixels\n");
     // If the current time isn't available yet, use the time that was checked when informing the
     // engine that a frame was available (if any).
     CMTime lastAvailableTime = self.frameUpdater.lastKnownAvailableTime;

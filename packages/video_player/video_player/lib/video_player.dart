@@ -384,6 +384,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
   Timer? _timer;
   bool _isDisposed = false;
   Completer<void>? _creatingCompleter;
+  Completer<void>? _newAssetCompleter;
   StreamSubscription<dynamic>? _eventSubscription;
   _VideoAppLifeCycleObserver? _lifeCycleObserver;
 
@@ -488,19 +489,21 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
           value = value.copyWith(isBuffering: false);
           break;
         case VideoEventType.reloadingStart:
-          value = value.copyWith(
-              isReadyToDisplay: false,
-              isPlaying: false,
-              position: Duration.zero,
-            );
+          
+          // value = value.copyWith(
+          //     isReadyToDisplay: false,
+          //     isPlaying: false,
+          //     position: Duration.zero,
+          //   );
           break;
         case VideoEventType.reloadingEnd:
-          //print('FOO ${event.duration} ${event.size}');
+          print('FOO reloadingEnd ${dataSource.split('/').last} ${event.duration} ${event.size}');
           value = value.copyWith(
             isReadyToDisplay: true,
             duration: event.duration,
             size: event.size,
             );
+            _newAssetCompleter?.complete(null);
           break;
         case VideoEventType.isPlayingStateUpdate:
           if (event.isPlaying ?? false) {
@@ -597,7 +600,17 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
 
     this.dataSource = dataSource.toString();
 
+    _newAssetCompleter = Completer<void>();
+
+    print('FOO reloadingStart ${this.dataSource.split('/').last}');
+    value = value.copyWith(
+      isReadyToDisplay: false,
+      isPlaying: false,
+      position: Duration.zero,
+    );
+
     await _videoPlayerPlatform.load(_textureId, dataSourceDescription);
+    return _newAssetCompleter!.future;
   }
 
   Future<void> _applyLooping() async {
