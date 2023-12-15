@@ -17,7 +17,6 @@
 #endif
 
 # define ONE_FRAME_DURATION 0.03
-# define TWO_FRAME_DURATION 0.06
 
 @interface FVPFrameUpdater : NSObject
 @property(nonatomic) int64_t textureId;
@@ -46,7 +45,6 @@
 
 - (void)displayLinkFired {
   // Only report a new frame if one is actually available, or the check is being skipped.
-    //printf("displayLinkFired\n");
   BOOL reportFrame = NO;
   if (self.skipBufferAvailabilityCheck) {
     reportFrame = YES;
@@ -59,7 +57,6 @@
   }
 
   if (reportFrame) {
-      //printf("displayLinkFired + frame reported\n");
     [_registry textureFrameAvailable:_textureId];
   }
 }
@@ -318,7 +315,6 @@ NS_INLINE CGFloat radiansToDegrees(CGFloat radians) {
                                              withAsset:asset
                                         withVideoTrack:videoTrack];
 
-              printf("new videoComposition\n");
             item.videoComposition = videoComposition;
           }
         };
@@ -427,7 +423,6 @@ NS_INLINE CGFloat radiansToDegrees(CGFloat radians) {
     }
   } else if (context == isReadyToDisplayContext) {
       AVPlayerLayer *playerLayer = (AVPlayerLayer *)object;
-      printf("isReadyForDisplay %d\n", playerLayer.isReadyForDisplay);
 
       if (playerLayer.isReadyForDisplay) {
           [self finishLoadingNewAssetIfAble];
@@ -444,14 +439,8 @@ NS_INLINE CGFloat radiansToDegrees(CGFloat radians) {
     __weak FVPVideoPlayer *weakSelf = self;
     dispatch_after(popTime, dispatch_get_main_queue(), ^(void){
         weakSelf.displayLink.running = YES;
-        //weakSelf.loadingNewAsset = NO;
     });
 
-    printf("Delegate outputMediaDataWillChange\n");
-}
-
-- (void)outputSequenceWasFlushed:(AVPlayerItemOutput *)sender {
-    printf("Delegate outputSequenceWasFlushed\n");
 }
 
 - (void)updatePlayingState {
@@ -604,29 +593,13 @@ NS_INLINE CGFloat radiansToDegrees(CGFloat radians) {
   _player.volume = (float)((volume < 0.0) ? 0.0 : ((volume > 1.0) ? 1.0 : volume));
 }
 
-
-
 - (void)loadAsset:(NSURL *)url httpHeaders:(nonnull NSDictionary<NSString *, NSString *> *)headers {
 
     if (_loadingNewAsset) {
-        printf("BLOCKED\n");
-
-//        if (_player.rate == 0) {
-//            NSTimeInterval delayInSeconds = 1;
-//            dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delayInSeconds * NSEC_PER_SEC));
-//            dispatch_after(popTime, dispatch_get_main_queue(), ^(void){
-//                NSLog(@"Do some work");
-//                [self loadAsset:url httpHeaders:headers];
-//            });
-//        }
-
         return;
     }
 
     _loadingNewAsset = YES;
-//    __weak FVPVideoPlayer *weakSelf = self;
-    self.startTime = CACurrentMediaTime();
-
     [_videoOutput setDelegate:self queue:nil];
 
     NSDictionary<NSString *, id> *options = nil;
@@ -635,79 +608,18 @@ NS_INLINE CGFloat radiansToDegrees(CGFloat radians) {
     }
     AVPlayerItem *previousItem = _player.currentItem;
     [previousItem removeOutput:_videoOutput];
-    _frameUpdater.lastKnownAvailableTime = kCMTimeInvalid; // Skippas på ios
 
     AVURLAsset *urlAsset = [AVURLAsset URLAssetWithURL:url options:options];
-    //[_player setRate:0.0f]
     AVPlayerItem *item = [AVPlayerItem playerItemWithAsset:urlAsset];
 
     _displayLink.running = NO;
 
     [self removeKeyValueObservers];
-    printf("LoadAsset\n");
 
-//    _player = [_player initWithPlayerItem: item];
     [item addOutput:_videoOutput];
     [_player replaceCurrentItemWithPlayerItem:item];
     [self addObserversForItem:item player:_player];
     [_videoOutput requestNotificationOfMediaDataChangeWithAdvanceInterval:ONE_FRAME_DURATION];
-
-
-//    NSTimeInterval delayInSeconds = 0.1;
-//    dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delayInSeconds * NSEC_PER_SEC));
-//    dispatch_after(popTime, dispatch_get_main_queue(), ^(void){
-//      NSLog(@"Do some work");
-//
-//    });
-//    NSLog(@"Do some work 2");
-
-    // TODO: KEEP THIS AND SEND TO FLUTTER
-//    AVAsset *asset = [item asset];
-//    void (^assetCompletionHandler)(void) = ^{
-//      if ([asset statusOfValueForKey:@"tracks" error:nil] == AVKeyValueStatusLoaded) {
-//        NSArray *tracks = [asset tracksWithMediaType:AVMediaTypeVideo];
-//        if ([tracks count] > 0) {
-//          AVAssetTrack *videoTrack = tracks[0];
-//          void (^trackCompletionHandler)(void) = ^{
-//            if (self->_disposed) return;
-//            if ([videoTrack statusOfValueForKey:@"preferredTransform"
-//                                          error:nil] == AVKeyValueStatusLoaded) {
-//              // Rotate the video by using a videoComposition and the preferredTransform
-//              self->_preferredTransform = FVPGetStandardizedTransformForTrack(videoTrack);
-//              // Note:
-//              // https://developer.apple.com/documentation/avfoundation/avplayeritem/1388818-videocomposition
-//              // Video composition can only be used with file-based media and is not supported for
-//              // use with media served using HTTP Live Streaming.
-//              AVMutableVideoComposition *videoComposition =
-//                  [self getVideoCompositionWithTransform:self->_preferredTransform
-//                                               withAsset:asset
-//                                          withVideoTrack:videoTrack];
-//
-//                printf("new videoComposition\n");
-//              item.videoComposition = videoComposition;
-//            }
-//          };
-//          [videoTrack loadValuesAsynchronouslyForKeys:@[ @"preferredTransform" ]
-//                                    completionHandler:trackCompletionHandler];
-//        }
-//      }
-//    };
-//    [asset loadValuesAsynchronouslyForKeys:@[ @"tracks" ] completionHandler:assetCompletionHandler];
-
-    // TODO: KEEP THIS AND SEND TO FLUTTER END
-    //[_player seekToTime:kCMTimeZero];
-
-//    _isInitialized = NO;
-//    int64_t duration = 0;
-//    CGFloat noSize = 0.0;
-//    _eventSink(@{
-//      @"event" : @"initialized",
-//      @"duration" : @(duration),
-//      @"width" : @(noSize),
-//      @"height" : @(noSize)
-//    });
-
-
 
     if (_eventSink != nil){
         _eventSink(@{@"event" : @"reloadingStart"});
@@ -739,14 +651,11 @@ NS_INLINE CGFloat radiansToDegrees(CGFloat radians) {
 }
 
 - (CVPixelBufferRef)copyPixelBuffer {
-    //printf("copyPixelBuffer\n");
   CVPixelBufferRef buffer = NULL;
   CMTime outputItemTime = [_videoOutput itemTimeForHostTime:CACurrentMediaTime()];
   if ([_videoOutput hasNewPixelBufferForItemTime:outputItemTime]) {
-      //printf("copyPixelBuffer has new pixels\n");
     buffer = [_videoOutput copyPixelBufferForItemTime:outputItemTime itemTimeForDisplay:NULL];
   } else {
-      //printf("copyPixelBuffer reuse old pixels\n");
     // If the current time isn't available yet, use the time that was checked when informing the
     // engine that a frame was available (if any).
     CMTime lastAvailableTime = self.frameUpdater.lastKnownAvailableTime;
