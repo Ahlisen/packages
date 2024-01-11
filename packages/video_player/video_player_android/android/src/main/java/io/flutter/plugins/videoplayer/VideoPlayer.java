@@ -38,6 +38,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Timer;
+import java.util.*;
 import java.util.List;
 import java.util.Map;
 import java.io.*;
@@ -317,7 +318,7 @@ final class VideoPlayer {
     System.out.println("FOO JAVA reloadStart check thread isalive " + hej + " uri:" + uri);
 
     timeoutTimer.cancel();
-    timeoutTimer.schedule(new Running(), 10*1000);
+    timeoutTimer.schedule(new Running(), 10000L);
   }
 
   void play() {
