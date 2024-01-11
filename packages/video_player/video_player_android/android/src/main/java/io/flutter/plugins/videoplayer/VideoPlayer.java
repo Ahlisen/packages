@@ -48,6 +48,7 @@ final class VideoPlayer {
   private static final String FORMAT_OTHER = "other";
 
   private ExoPlayer exoPlayer;
+  private String uri;
 
   private Surface surface;
 
@@ -78,6 +79,7 @@ final class VideoPlayer {
     this.eventChannel = eventChannel;
     this.textureEntry = textureEntry;
     this.options = options;
+    this.uri = "";
 
     ExoPlayer exoPlayer = new ExoPlayer.Builder(context).build();
     Uri uri = Uri.parse(dataSource);
@@ -208,40 +210,40 @@ final class VideoPlayer {
 
           @Override
           public void onPlaybackStateChanged(final int playbackState) {
-            System.out.println("FOO JAVA new state");
-            
+            System.out.println("FOO JAVA new state " + uri);
+
             if (playbackState == Player.STATE_BUFFERING) {
-              System.out.println("FOO JAVA state buffering");
+              System.out.println("FOO JAVA state buffering " + uri);
               setBuffering(true);
               sendBufferingUpdate();
             } else if (playbackState == Player.STATE_READY) {
-              System.out.println("FOO JAVA state ready");
+              System.out.println("FOO JAVA state ready " + uri);
               if (!isInitialized) {
                 isInitialized = true;
                 sendInitialized();
               }
 
               if (isLoadingNewAsset) {
-                System.out.println("FOO JAVA send reload end");
+                System.out.println("FOO JAVA send reload end " + uri);
                 isLoadingNewAsset = false;
                 sendReloadingEnd();
               }
             } else if (playbackState == Player.STATE_ENDED) {
-              System.out.println("FOO JAVA state ended");
+              System.out.println("FOO JAVA state ended " + uri);
               Map<String, Object> event = new HashMap<>();
               event.put("event", "completed");
               eventSink.success(event);
             }
 
             if (playbackState != Player.STATE_BUFFERING) {
-              System.out.println("FOO JAVA state not buffering");
+              System.out.println("FOO JAVA state not buffering " + uri);
               setBuffering(false);
             }
           }
 
           @Override
           public void onPlayerError(@NonNull final PlaybackException error) {
-            System.out.println("FOO JAVA player error");
+            System.out.println("FOO JAVA player error " + uri);
             setBuffering(false);
             if (eventSink != null) {
               eventSink.error("VideoError", "Video player had error " + error, null);
@@ -250,7 +252,7 @@ final class VideoPlayer {
 
           @Override
           public void onIsPlayingChanged(boolean isPlaying) {
-            System.out.println("FOO JAVA is playing changed");
+            System.out.println("FOO JAVA is playing changed " + uri);
             if (eventSink != null) {
               Map<String, Object> event = new HashMap<>();
               event.put("event", "isPlayingStateUpdate");
@@ -289,6 +291,7 @@ final class VideoPlayer {
     MediaSource mediaSource = buildMediaSource(uri, dataSourceFactory, formatHint);
 
     exoPlayer.setMediaSource(mediaSource);
+    this.uri = uri.toString();
     exoPlayer.prepare();
 
     isLoadingNewAsset = true;
