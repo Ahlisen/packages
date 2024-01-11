@@ -30,7 +30,7 @@ dependencies:
     git: 
       url: https://github.com/Ahlisen/packages
       path: packages/video_player/video_player_android
-      ref: d9877c3490ef08de5be43c663882649aa412c93f
+      ref: 81e66e847a3427f4f09dbf117302a8ecc76d93b6
   video_player_avfoundation: 
     git: 
       url: https://github.com/Ahlisen/packages
