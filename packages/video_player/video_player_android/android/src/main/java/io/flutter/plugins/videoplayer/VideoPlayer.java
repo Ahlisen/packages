@@ -39,6 +39,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.io.*;
 
 final class VideoPlayer {
   private static final String FORMAT_SS = "ss";
@@ -217,7 +218,7 @@ final class VideoPlayer {
               }
 
               if (isLoadingNewAsset) {
-                println('FOO JAVA send reload end');
+                System.out.println("FOO JAVA send reload end");
                 isLoadingNewAsset = false;
                 sendReloadingEnd();
               }
@@ -234,7 +235,7 @@ final class VideoPlayer {
 
           @Override
           public void onPlayerError(@NonNull final PlaybackException error) {
-            println('FOO JAVA player error');
+            System.out.println("FOO JAVA player error");
             setBuffering(false);
             if (eventSink != null) {
               eventSink.error("VideoError", "Video player had error " + error, null);
