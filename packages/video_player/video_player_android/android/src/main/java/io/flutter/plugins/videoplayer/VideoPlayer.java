@@ -114,6 +114,9 @@ final class VideoPlayer {
     this.options = options;
     this.httpDataSourceFactory = httpDataSourceFactory;
 
+    this.uri = "";
+    this.timeoutTimer = new Timer();
+
     setUpVideoPlayer(exoPlayer, eventSink);
   }
 
@@ -284,6 +287,7 @@ final class VideoPlayer {
   }
 
   class Running extends TimerTask {
+      @Override
       public void run() {
         if (eventSink != null) {
           eventSink.error("VideoError", "Video player timed out", null);
@@ -318,7 +322,9 @@ final class VideoPlayer {
     System.out.println("FOO JAVA reloadStart check thread isalive " + hej + " uri:" + uri);
 
     timeoutTimer.cancel();
+    System.out.println("FOO JAVA previous timer cancelled uri:" + uri);
     timeoutTimer.schedule(new Running(), 10000L);
+    System.out.println("FOO JAVA timer started uri:" + uri);
   }
 
   void play() {
