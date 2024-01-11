@@ -286,15 +286,15 @@ final class VideoPlayer {
         !isMixMode);
   }
 
-  class Running extends TimerTask {
-      @Override
-      public void run() {
-        if (eventSink != null) {
-          eventSink.error("VideoError", "Video player timed out", null);
-          System.out.println("FOO JAVA TIMER TIMEDOUT " + uri);
-        }
-      }
-   }
+  // class Running extends TimerTask {
+  //     @Override
+  //     public void run() {
+  //       if (eventSink != null) {
+  //         eventSink.error("VideoError", "Video player timed out", null);
+  //         System.out.println("FOO JAVA TIMER TIMEDOUT " + uri);
+  //       }
+  //     }
+  //  }
 
   void loadAsset(Context context,
       String dataSource,
@@ -321,9 +321,21 @@ final class VideoPlayer {
     boolean hej = exoPlayer.getPlaybackLooper().getThread().isAlive();
     System.out.println("FOO JAVA reloadStart check thread isalive " + hej + " uri:" + uri);
 
+    task = new TimerTask() {
+        @Override
+        public void run() { 
+          if (eventSink != null) {
+            eventSink.error("VideoError", "Video player timed out", null);
+            System.out.println("FOO JAVA TIMER TIMEDOUT " + uri);
+          }
+          System.out.println("FOO JAVA TIMER TIMEDOUT and canceled " + uri);
+          timeoutTimer.cancel();
+        }
+    };
+
     timeoutTimer.cancel();
     System.out.println("FOO JAVA previous timer cancelled uri:" + uri);
-    timeoutTimer.schedule(new Running(), 10000L);
+    timeoutTimer.schedule(task, 10000L, 10000L);
     System.out.println("FOO JAVA timer started uri:" + uri);
   }
 
