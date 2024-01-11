@@ -7,7 +7,8 @@ package io.flutter.plugins.videoplayer;
 import static com.google.android.exoplayer2.Player.REPEAT_MODE_ALL;
 import static com.google.android.exoplayer2.Player.REPEAT_MODE_OFF;
 
-import android.os.Handler;
+import android.os.CountDownTimer;
+//import android.os.Handler;
 import android.content.Context;
 import android.net.Uri;
 import android.view.Surface;
@@ -60,6 +61,7 @@ final class VideoPlayer {
   private QueuingEventSink eventSink;
   //private Timer timeoutTimer;
   private Handler handler;
+  private CountDownTimer countdown;
 
   private final EventChannel eventChannel;
 
@@ -85,7 +87,17 @@ final class VideoPlayer {
     this.textureEntry = textureEntry;
     this.options = options;
     this.uri = "";
-    this.handler = new Handler();
+    //this.handler = new Handler();
+    this.countdown = new CountDownTimer(30000, 1000) {
+
+        public void onTick(long millisUntilFinished) {
+            //mTextField.setText("seconds remaining: " + millisUntilFinished / 1000);
+        }
+
+        public void onFinish() {
+            //mTextField.setText("done!");
+        }
+    };
 
     ExoPlayer exoPlayer = new ExoPlayer.Builder(context).build();
     Uri uri = Uri.parse(dataSource);
@@ -117,7 +129,17 @@ final class VideoPlayer {
     this.httpDataSourceFactory = httpDataSourceFactory;
 
     this.uri = "";
-    this.handler = new Handler();
+    //this.handler = new Handler();
+        this.countdown = new CountDownTimer(30000, 1000) {
+
+        public void onTick(long millisUntilFinished) {
+            //mTextField.setText("seconds remaining: " + millisUntilFinished / 1000);
+        }
+
+        public void onFinish() {
+            //mTextField.setText("done!");
+        }
+    };
 
     setUpVideoPlayer(exoPlayer, eventSink);
   }
@@ -235,7 +257,8 @@ final class VideoPlayer {
               if (isLoadingNewAsset) {
                 System.out.println("FOO JAVA send reload end " + uri);
                 isLoadingNewAsset = false;
-                handler.removeCallbacksAndMessages(null);
+                //handler.removeCallbacksAndMessages(null);
+                this.countdown.cancel();
                 sendReloadingEnd();
               }
             } else if (playbackState == Player.STATE_ENDED) {
@@ -335,18 +358,33 @@ final class VideoPlayer {
     //     }
     // };
 
-    final Runnable r = new Runnable() {
-      public void run() {
-          if (eventSink != null) {
-            eventSink.error("VideoError", "Video player timed out", null);
-            System.out.println("FOO JAVA TIMER TIMEDOUT " + uri);
-          }
-      }
-    };
+    // final Runnable r = new Runnable() {
+    //   public void run() {
+    //       if (eventSink != null) {
+    //         eventSink.error("VideoError", "Video player timed out", null);
+    //         System.out.println("FOO JAVA TIMER TIMEDOUT " + uri);
+    //       }
+    //   }
+    // };
 
-    handler.removeCallbacksAndMessages(null);
+    //handler.removeCallbacksAndMessages(null);
     System.out.println("FOO JAVA previous timer cancelled uri:" + uri);
-    handler.postDelayed(r, 1000);
+    //handler.postDelayed(r, 1000);
+
+    this.countdown = new CountDownTimer(10000, 10000) {
+
+          public void onTick(long millisUntilFinished) {
+              //mTextField.setText("seconds remaining: " + millisUntilFinished / 1000);
+          }
+
+          public void onFinish() {
+                if (eventSink != null) {
+                  eventSink.error("VideoError", "Video player timed out", null);
+                  System.out.println("FOO JAVA TIMER TIMEDOUT " + uri);
+                }
+          }
+      }.start();
+
     System.out.println("FOO JAVA timer started uri:" + uri);
   }
 
