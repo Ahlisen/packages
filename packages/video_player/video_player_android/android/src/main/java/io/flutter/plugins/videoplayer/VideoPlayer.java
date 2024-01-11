@@ -241,6 +241,7 @@ final class VideoPlayer {
 
           @Override
           public void onPlaybackStateChanged(final int playbackState) {
+            countdown.cancel();
             System.out.println("FOO JAVA new state " + uri);
 
             if (playbackState == Player.STATE_BUFFERING) {
@@ -258,7 +259,6 @@ final class VideoPlayer {
                 System.out.println("FOO JAVA send reload end " + uri);
                 isLoadingNewAsset = false;
                 //handler.removeCallbacksAndMessages(null);
-                countdown.cancel();
                 sendReloadingEnd();
               }
             } else if (playbackState == Player.STATE_ENDED) {
@@ -371,7 +371,8 @@ final class VideoPlayer {
     System.out.println("FOO JAVA previous timer cancelled uri:" + uri);
     //handler.postDelayed(r, 1000);
 
-    this.countdown = new CountDownTimer(10000, 10000) {
+    this.countdown.cancel();
+    this.countdown = new CountDownTimer(1000, 1000) {
 
           public void onTick(long millisUntilFinished) {
               //mTextField.setText("seconds remaining: " + millisUntilFinished / 1000);
@@ -379,8 +380,8 @@ final class VideoPlayer {
 
           public void onFinish() {
                 if (eventSink != null) {
-                  eventSink.error("VideoError", "Video player timed out", null);
-                  System.out.println("FOO JAVA TIMER TIMEDOUT " + uri);
+                  eventSink.error("VideoError", "Video player timed out, no events", null);
+                  System.out.println("FOO JAVA TIMER TIMEDOUT, no events " + uri);
                 }
           }
       }.start();
