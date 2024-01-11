@@ -40,7 +40,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.io.*;
+//import java.io.*;
 
 final class VideoPlayer {
   private static final String FORMAT_SS = "ss";
@@ -222,41 +222,41 @@ final class VideoPlayer {
 
           @Override
           public void onPlaybackStateChanged(final int playbackState) {
-            System.out.println("FOO JAVA new state " + uri);
+            //System.out.println("FOO JAVA new state " + uri);
 
             if (playbackState == Player.STATE_BUFFERING) {
-              System.out.println("FOO JAVA state buffering " + uri);
+              //System.out.println("FOO JAVA state buffering " + uri);
               setBuffering(true);
               sendBufferingUpdate();
             } else if (playbackState == Player.STATE_READY) {
-              System.out.println("FOO JAVA state ready " + uri);
+              //System.out.println("FOO JAVA state ready " + uri);
               if (!isInitialized) {
                 isInitialized = true;
                 sendInitialized();
               }
 
               if (isLoadingNewAsset) {
-                System.out.println("FOO JAVA send reload end " + uri);
+                //System.out.println("FOO JAVA send reload end " + uri);
                 isLoadingNewAsset = false;
                 countdown.cancel();
                 sendReloadingEnd();
               }
             } else if (playbackState == Player.STATE_ENDED) {
-              System.out.println("FOO JAVA state ended " + uri);
+              //System.out.println("FOO JAVA state ended " + uri);
               Map<String, Object> event = new HashMap<>();
               event.put("event", "completed");
               eventSink.success(event);
             }
 
             if (playbackState != Player.STATE_BUFFERING) {
-              System.out.println("FOO JAVA state not buffering " + uri);
+              //System.out.println("FOO JAVA state not buffering " + uri);
               setBuffering(false);
             }
           }
 
           @Override
           public void onPlayerError(@NonNull final PlaybackException error) {
-            System.out.println("FOO JAVA player error " + uri);
+            //System.out.println("FOO JAVA player error " + uri);
             setBuffering(false);
             if (eventSink != null) {
               eventSink.error("VideoError", "Video player had error " + error, null);
@@ -265,7 +265,7 @@ final class VideoPlayer {
 
           @Override
           public void onIsPlayingChanged(boolean isPlaying) {
-            System.out.println("FOO JAVA is playing changed " + uri);
+            //System.out.println("FOO JAVA is playing changed " + uri);
             if (eventSink != null) {
               Map<String, Object> event = new HashMap<>();
               event.put("event", "isPlayingStateUpdate");
@@ -296,7 +296,7 @@ final class VideoPlayer {
   //     public void run() {
   //       if (eventSink != null) {
   //         eventSink.error("VideoError", "Video player timed out", null);
-  //         System.out.println("FOO JAVA TIMER TIMEDOUT " + uri);
+  //         //System.out.println("FOO JAVA TIMER TIMEDOUT " + uri);
   //       }
   //     }
   //  }
@@ -323,21 +323,8 @@ final class VideoPlayer {
     event.put("event", "reloadingStart");
     eventSink.success(event);
 
-    boolean hej = exoPlayer.getPlaybackLooper().getThread().isAlive();
-    System.out.println("FOO JAVA reloadStart check thread isalive " + hej + " uri:" + uri);
-
-    // final Runnable r = new Runnable() {
-    //   public void run() {
-    //       if (eventSink != null) {
-    //         eventSink.error("VideoError", "Video player timed out", null);
-    //         System.out.println("FOO JAVA TIMER TIMEDOUT " + uri);
-    //       }
-    //   }
-    // };
-
-    //handler.removeCallbacksAndMessages(null);
-    System.out.println("FOO JAVA previous timer cancelled uri:" + uri);
-    //handler.postDelayed(r, 1000);
+    //boolean hej = exoPlayer.getPlaybackLooper().getThread().isAlive();
+    //System.out.println("FOO JAVA reloadStart check thread isalive " + hej + " uri:" + uri);
 
     this.countdown.cancel();
     this.countdown = new CountDownTimer(8000, 8000) {
@@ -347,12 +334,12 @@ final class VideoPlayer {
           public void onFinish() {
                 if (eventSink != null) {
                   eventSink.error("VideoError", "Video player timed out, no events", null);
-                  System.out.println("FOO JAVA TIMER TIMEDOUT, no events " + uri);
+                  //System.out.println("FOO JAVA TIMER TIMEDOUT, no events " + uri);
                 }
           }
       }.start();
 
-    System.out.println("FOO JAVA timer started uri:" + uri);
+    //System.out.println("FOO JAVA timer started uri:" + uri);
   }
 
   void play() {
