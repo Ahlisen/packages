@@ -208,10 +208,14 @@ final class VideoPlayer {
 
           @Override
           public void onPlaybackStateChanged(final int playbackState) {
+            System.out.println("FOO JAVA new state");
+            
             if (playbackState == Player.STATE_BUFFERING) {
+              System.out.println("FOO JAVA state buffering");
               setBuffering(true);
               sendBufferingUpdate();
             } else if (playbackState == Player.STATE_READY) {
+              System.out.println("FOO JAVA state ready");
               if (!isInitialized) {
                 isInitialized = true;
                 sendInitialized();
@@ -223,12 +227,14 @@ final class VideoPlayer {
                 sendReloadingEnd();
               }
             } else if (playbackState == Player.STATE_ENDED) {
+              System.out.println("FOO JAVA state ended");
               Map<String, Object> event = new HashMap<>();
               event.put("event", "completed");
               eventSink.success(event);
             }
 
             if (playbackState != Player.STATE_BUFFERING) {
+              System.out.println("FOO JAVA state not buffering");
               setBuffering(false);
             }
           }
@@ -244,6 +250,7 @@ final class VideoPlayer {
 
           @Override
           public void onIsPlayingChanged(boolean isPlaying) {
+            System.out.println("FOO JAVA is playing changed");
             if (eventSink != null) {
               Map<String, Object> event = new HashMap<>();
               event.put("event", "isPlayingStateUpdate");
