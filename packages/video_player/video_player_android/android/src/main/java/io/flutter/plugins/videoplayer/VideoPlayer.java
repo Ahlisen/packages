@@ -57,7 +57,8 @@ final class VideoPlayer {
   private final TextureRegistry.SurfaceTextureEntry textureEntry;
 
   private QueuingEventSink eventSink;
-  private Timer timeoutTimer;
+  //private Timer timeoutTimer;
+  private Handler handler;
 
   private final EventChannel eventChannel;
 
@@ -83,7 +84,7 @@ final class VideoPlayer {
     this.textureEntry = textureEntry;
     this.options = options;
     this.uri = "";
-    this.timeoutTimer = new Timer();
+    this.handler = new Handler();
 
     ExoPlayer exoPlayer = new ExoPlayer.Builder(context).build();
     Uri uri = Uri.parse(dataSource);
@@ -115,7 +116,7 @@ final class VideoPlayer {
     this.httpDataSourceFactory = httpDataSourceFactory;
 
     this.uri = "";
-    this.timeoutTimer = new Timer();
+    this.handler = new Handler();
 
     setUpVideoPlayer(exoPlayer, eventSink);
   }
@@ -233,7 +234,7 @@ final class VideoPlayer {
               if (isLoadingNewAsset) {
                 System.out.println("FOO JAVA send reload end " + uri);
                 isLoadingNewAsset = false;
-                timeoutTimer.cancel();
+                handler.removeCallbacksAndMessages(null);
                 sendReloadingEnd();
               }
             } else if (playbackState == Player.STATE_ENDED) {
@@ -321,21 +322,30 @@ final class VideoPlayer {
     boolean hej = exoPlayer.getPlaybackLooper().getThread().isAlive();
     System.out.println("FOO JAVA reloadStart check thread isalive " + hej + " uri:" + uri);
 
-    TimerTask task = new TimerTask() {
-        @Override
-        public void run() { 
+    // TimerTask task = new TimerTask() {
+    //     @Override
+    //     public void run() { 
+    //       if (eventSink != null) {
+    //         eventSink.error("VideoError", "Video player timed out", null);
+    //         System.out.println("FOO JAVA TIMER TIMEDOUT " + uri);
+    //       }
+    //       System.out.println("FOO JAVA TIMER TIMEDOUT and canceled " + uri);
+    //       timeoutTimer.cancel();
+    //     }
+    // };
+
+    final Runnable r = new Runnable() {
+      public void run() {
           if (eventSink != null) {
             eventSink.error("VideoError", "Video player timed out", null);
             System.out.println("FOO JAVA TIMER TIMEDOUT " + uri);
           }
-          System.out.println("FOO JAVA TIMER TIMEDOUT and canceled " + uri);
-          timeoutTimer.cancel();
-        }
+      }
     };
 
-    timeoutTimer.cancel();
+    handler.removeCallbacksAndMessages(null);
     System.out.println("FOO JAVA previous timer cancelled uri:" + uri);
-    timeoutTimer.schedule(task, 10000L, 10000L);
+    handler.postDelayed(r, 1000);
     System.out.println("FOO JAVA timer started uri:" + uri);
   }
 
