@@ -8,7 +8,6 @@ import static com.google.android.exoplayer2.Player.REPEAT_MODE_ALL;
 import static com.google.android.exoplayer2.Player.REPEAT_MODE_OFF;
 
 import android.os.CountDownTimer;
-//import android.os.Handler;
 import android.content.Context;
 import android.net.Uri;
 import android.view.Surface;
@@ -39,8 +38,6 @@ import io.flutter.view.TextureRegistry;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Timer;
-import java.util.*;
 import java.util.List;
 import java.util.Map;
 import java.io.*;
@@ -59,8 +56,6 @@ final class VideoPlayer {
   private final TextureRegistry.SurfaceTextureEntry textureEntry;
 
   private QueuingEventSink eventSink;
-  //private Timer timeoutTimer;
-  //private Handler handler;
   private CountDownTimer countdown;
 
   private final EventChannel eventChannel;
@@ -87,16 +82,9 @@ final class VideoPlayer {
     this.textureEntry = textureEntry;
     this.options = options;
     this.uri = "";
-    //this.handler = new Handler();
-    this.countdown = new CountDownTimer(30000, 1000) {
-
-        public void onTick(long millisUntilFinished) {
-            //mTextField.setText("seconds remaining: " + millisUntilFinished / 1000);
-        }
-
-        public void onFinish() {
-            //mTextField.setText("done!");
-        }
+    this.countdown = new CountDownTimer(1000, 1000) {
+        public void onTick(long millisUntilFinished) {}
+        public void onFinish() {}
     };
 
     ExoPlayer exoPlayer = new ExoPlayer.Builder(context).build();
@@ -129,16 +117,9 @@ final class VideoPlayer {
     this.httpDataSourceFactory = httpDataSourceFactory;
 
     this.uri = "";
-    //this.handler = new Handler();
-        this.countdown = new CountDownTimer(30000, 1000) {
-
-        public void onTick(long millisUntilFinished) {
-            //mTextField.setText("seconds remaining: " + millisUntilFinished / 1000);
-        }
-
-        public void onFinish() {
-            //mTextField.setText("done!");
-        }
+    this.countdown = new CountDownTimer(1000, 1000) {
+        public void onTick(long millisUntilFinished) {}
+        public void onFinish() {}
     };
 
     setUpVideoPlayer(exoPlayer, eventSink);
@@ -241,7 +222,6 @@ final class VideoPlayer {
 
           @Override
           public void onPlaybackStateChanged(final int playbackState) {
-            countdown.cancel();
             System.out.println("FOO JAVA new state " + uri);
 
             if (playbackState == Player.STATE_BUFFERING) {
@@ -258,7 +238,7 @@ final class VideoPlayer {
               if (isLoadingNewAsset) {
                 System.out.println("FOO JAVA send reload end " + uri);
                 isLoadingNewAsset = false;
-                //handler.removeCallbacksAndMessages(null);
+                countdown.cancel();
                 sendReloadingEnd();
               }
             } else if (playbackState == Player.STATE_ENDED) {
@@ -333,8 +313,8 @@ final class VideoPlayer {
 
     MediaSource mediaSource = buildMediaSource(uri, dataSourceFactory, formatHint);
 
-    exoPlayer.setMediaSource(mediaSource);
     this.uri = uri.toString();
+    exoPlayer.setMediaSource(mediaSource);
     exoPlayer.prepare();
 
     isLoadingNewAsset = true;
@@ -345,18 +325,6 @@ final class VideoPlayer {
 
     boolean hej = exoPlayer.getPlaybackLooper().getThread().isAlive();
     System.out.println("FOO JAVA reloadStart check thread isalive " + hej + " uri:" + uri);
-
-    // TimerTask task = new TimerTask() {
-    //     @Override
-    //     public void run() { 
-    //       if (eventSink != null) {
-    //         eventSink.error("VideoError", "Video player timed out", null);
-    //         System.out.println("FOO JAVA TIMER TIMEDOUT " + uri);
-    //       }
-    //       System.out.println("FOO JAVA TIMER TIMEDOUT and canceled " + uri);
-    //       timeoutTimer.cancel();
-    //     }
-    // };
 
     // final Runnable r = new Runnable() {
     //   public void run() {
@@ -372,11 +340,9 @@ final class VideoPlayer {
     //handler.postDelayed(r, 1000);
 
     this.countdown.cancel();
-    this.countdown = new CountDownTimer(1000, 1000) {
+    this.countdown = new CountDownTimer(8000, 8000) {
 
-          public void onTick(long millisUntilFinished) {
-              //mTextField.setText("seconds remaining: " + millisUntilFinished / 1000);
-          }
+          public void onTick(long millisUntilFinished) {}
 
           public void onFinish() {
                 if (eventSink != null) {
