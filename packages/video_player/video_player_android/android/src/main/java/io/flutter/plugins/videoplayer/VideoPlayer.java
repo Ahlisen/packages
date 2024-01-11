@@ -37,6 +37,7 @@ import io.flutter.view.TextureRegistry;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Timer;
 import java.util.List;
 import java.util.Map;
 import java.io.*;
@@ -55,6 +56,7 @@ final class VideoPlayer {
   private final TextureRegistry.SurfaceTextureEntry textureEntry;
 
   private QueuingEventSink eventSink;
+  private Timer timeoutTimer;
 
   private final EventChannel eventChannel;
 
@@ -80,6 +82,7 @@ final class VideoPlayer {
     this.textureEntry = textureEntry;
     this.options = options;
     this.uri = "";
+    this.timeoutTimer = new Timer();
 
     ExoPlayer exoPlayer = new ExoPlayer.Builder(context).build();
     Uri uri = Uri.parse(dataSource);
@@ -226,6 +229,7 @@ final class VideoPlayer {
               if (isLoadingNewAsset) {
                 System.out.println("FOO JAVA send reload end " + uri);
                 isLoadingNewAsset = false;
+                timeoutTimer.cancel();
                 sendReloadingEnd();
               }
             } else if (playbackState == Player.STATE_ENDED) {
@@ -278,6 +282,15 @@ final class VideoPlayer {
         !isMixMode);
   }
 
+  class Running extends TimerTask {
+      public void run() {
+        if (eventSink != null) {
+          eventSink.error("VideoError", "Video player timed out", null);
+          System.out.println("FOO JAVA TIMER TIMEDOUT " + uri);
+        }
+      }
+   }
+
   void loadAsset(Context context,
       String dataSource,
       String formatHint,
@@ -302,6 +315,9 @@ final class VideoPlayer {
 
     boolean hej = exoPlayer.getPlaybackLooper().getThread().isAlive();
     System.out.println("FOO JAVA reloadStart check thread isalive " + hej + " uri:" + uri);
+
+    timeoutTimer.cancel();
+    timeoutTimer.schedule(new Running(), 10*1000);
   }
 
   void play() {
@@ -410,6 +426,7 @@ final class VideoPlayer {
     }
     textureEntry.release();
     eventChannel.setStreamHandler(null);
+    //timeoutTimer.purge();
     if (surface != null) {
       surface.release();
     }
