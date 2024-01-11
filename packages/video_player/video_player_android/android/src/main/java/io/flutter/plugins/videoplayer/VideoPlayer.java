@@ -321,7 +321,7 @@ final class VideoPlayer {
     boolean hej = exoPlayer.getPlaybackLooper().getThread().isAlive();
     System.out.println("FOO JAVA reloadStart check thread isalive " + hej + " uri:" + uri);
 
-    task = new TimerTask() {
+    TimerTask task = new TimerTask() {
         @Override
         public void run() { 
           if (eventSink != null) {
