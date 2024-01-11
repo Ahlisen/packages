@@ -299,6 +299,9 @@ final class VideoPlayer {
     Map<String, Object> event = new HashMap<>();
     event.put("event", "reloadingStart");
     eventSink.success(event);
+
+    boolean hej = exoPlayer.getPlaybackLooper().getThread().isAlive();
+    System.out.println("FOO JAVA reloadStart check thread isalive " + hej + " uri:" + uri);
   }
 
   void play() {
