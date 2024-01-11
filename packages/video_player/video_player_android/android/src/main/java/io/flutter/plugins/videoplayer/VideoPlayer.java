@@ -217,6 +217,7 @@ final class VideoPlayer {
               }
 
               if (isLoadingNewAsset) {
+                println('FOO JAVA send reload end');
                 isLoadingNewAsset = false;
                 sendReloadingEnd();
               }
@@ -233,6 +234,7 @@ final class VideoPlayer {
 
           @Override
           public void onPlayerError(@NonNull final PlaybackException error) {
+            println('FOO JAVA player error');
             setBuffering(false);
             if (eventSink != null) {
               eventSink.error("VideoError", "Video player had error " + error, null);
