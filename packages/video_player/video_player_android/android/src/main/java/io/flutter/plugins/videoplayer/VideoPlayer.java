@@ -60,7 +60,7 @@ final class VideoPlayer {
 
   private QueuingEventSink eventSink;
   //private Timer timeoutTimer;
-  private Handler handler;
+  //private Handler handler;
   private CountDownTimer countdown;
 
   private final EventChannel eventChannel;
@@ -258,7 +258,7 @@ final class VideoPlayer {
                 System.out.println("FOO JAVA send reload end " + uri);
                 isLoadingNewAsset = false;
                 //handler.removeCallbacksAndMessages(null);
-                this.countdown.cancel();
+                countdown.cancel();
                 sendReloadingEnd();
               }
             } else if (playbackState == Player.STATE_ENDED) {
