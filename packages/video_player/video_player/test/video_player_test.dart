@@ -89,7 +89,10 @@ class FakeController extends ValueNotifier<VideoPlayerValue>
   
   @override
   set dataSource(String _dataSource) {
-    // TODO: implement dataSource
+  }
+  
+  @override
+  Future<void> awaitReadyToDisplay() async {
   }
 }
 

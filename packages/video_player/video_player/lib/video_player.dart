@@ -457,6 +457,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
 
       switch (event.eventType) {
         case VideoEventType.initialized:
+          print('VideoPlayer initialized ${dataSource.split('/').last} ${event.duration} ${event.size}');
           value = value.copyWith(
             duration: event.duration,
             size: event.size,
@@ -497,7 +498,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
           //   );
           break;
         case VideoEventType.reloadingEnd:
-          print('FOO reloadingEnd ${dataSource.split('/').last} ${event.duration} ${event.size}');
+          print('VideoPlayer reloadingEnd ${dataSource.split('/').last} ${event.duration} ${event.size}');
           value = value.copyWith(
             isReadyToDisplay: true,
             duration: event.duration,
@@ -528,7 +529,6 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
       value = VideoPlayerValue.erroneous(e.message!);
       _timer?.cancel();
 
-      //print('FOO error happened ${dataSource.split('/').last} ${e.message!}');
       if (!initializingCompleter.isCompleted) {
         initializingCompleter.completeError(obj);
       }
@@ -591,6 +591,23 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
     await _applyPlayPause();
   }
 
+  /// If another process accesses the video player while it is loading we can still await the completion of the load.
+  Future<void> awaitReadyToDisplay() async {
+    if (value.isReadyToDisplay) {
+      return;
+    }
+
+    if (_creatingCompleter != null && !_creatingCompleter!.isCompleted) {
+      await _creatingCompleter!.future;
+    }
+
+    if (_newAssetCompleter != null && !_newAssetCompleter!.isCompleted) {
+      await _newAssetCompleter!.future;
+    }
+
+    return;
+  }
+
   /// Loads new asset
   Future<void> loadAsset(Uri dataSource) async {
     if (_isDisposedOrNotInitialized) {
@@ -605,10 +622,10 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
     );
 
     this.dataSource = dataSource.toString();
+    print('VideoPlayer reloadingStart ${this.dataSource.split('/').last}');
 
     _newAssetCompleter = Completer<void>();
 
-    print('FOO reloadingStart ${this.dataSource.split('/').last}');
     value = value.copyWith(
       isReadyToDisplay: false,
       isPlaying: false,
