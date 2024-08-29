@@ -92,16 +92,4 @@ void main() {
     verifyThrows('/', '');
     verifyThrows('', '');
   });
-
-  test('canonicalUri', () {
-    void verify(String path, String expected) =>
-        expect(canonicalUri(path), expected);
-    verify('/a', '/a');
-    verify('/a/', '/a');
-    verify('/', '/');
-    verify('/a/b/', '/a/b');
-
-    expect(() => canonicalUri('::::'), throwsA(isA<FormatException>()));
-    expect(() => canonicalUri(''), throwsA(anything));
-  });
 }

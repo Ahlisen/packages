@@ -2,12 +2,12 @@ name: video_player_web
 description: Web platform implementation of video_player.
 repository: https://github.com/flutter/packages/tree/main/packages/video_player/video_player_web
 issue_tracker: https://github.com/flutter/flutter/issues?q=is%3Aissue+is%3Aopen+label%3A%22p%3A+video_player%22
-version: 2.1.2
 publish_to: none
+version: 2.3.2
 
 environment:
-  sdk: ">=3.1.0 <4.0.0"
-  flutter: ">=3.13.0"
+  sdk: ^3.4.0
+  flutter: ">=3.22.0"
 
 flutter:
   plugin:
@@ -23,10 +23,8 @@ dependencies:
   flutter_web_plugins:
     sdk: flutter
   video_player_platform_interface:
-    git: 
-      url: https://github.com/Ahlisen/packages
-      path: packages/video_player/video_player_platform_interface
-      ref: c3edf2d4767c289a43e4fddc72c7b4634690a9eb
+    path: ../video_player_platform_interface
+  web: ">=0.5.1 <2.0.0"
 
 dev_dependencies:
   flutter_test:

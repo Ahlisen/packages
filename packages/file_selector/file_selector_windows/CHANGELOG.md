@@ -1,6 +1,11 @@
 ## NEXT
 
-* Updates minimum supported SDK version to Flutter 3.10/Dart 3.0.
+* Updates minimum supported SDK version to Flutter 3.19/Dart 3.3.
+
+## 0.9.3+2
+
+* Updates to pigeon 21.
+* Updates minimum supported SDK version to Flutter 3.16/Dart 3.2.
 
 ## 0.9.3+1
 

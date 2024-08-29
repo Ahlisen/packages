@@ -25,8 +25,6 @@ import io.flutter.plugins.videoplayer.Messages.VolumeMessage;
 import io.flutter.view.TextureRegistry;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
-import java.util.HashMap;
-import java.util.Map;
 import javax.net.ssl.HttpsURLConnection;
 
 /** Android platform implementation of the VideoPlayerPlugin. */
@@ -38,30 +36,6 @@ public class VideoPlayerPlugin implements FlutterPlugin, AndroidVideoPlayerApi {
 
   /** Register this with the v2 embedding for the plugin to respond to lifecycle callbacks. */
   public VideoPlayerPlugin() {}
-
-  @SuppressWarnings("deprecation")
-  private VideoPlayerPlugin(io.flutter.plugin.common.PluginRegistry.Registrar registrar) {
-    this.flutterState =
-        new FlutterState(
-            registrar.context(),
-            registrar.messenger(),
-            registrar::lookupKeyForAsset,
-            registrar::lookupKeyForAsset,
-            registrar.textures());
-    flutterState.startListening(this, registrar.messenger());
-  }
-
-  /** Registers this with the stable v1 embedding. Will not respond to lifecycle events. */
-  @SuppressWarnings("deprecation")
-  public static void registerWith(
-      @NonNull io.flutter.plugin.common.PluginRegistry.Registrar registrar) {
-    final VideoPlayerPlugin plugin = new VideoPlayerPlugin(registrar);
-    registrar.addViewDestroyListener(
-        view -> {
-          plugin.onDestroy();
-          return false; // We are not interested in assuming ownership of the NativeView.
-        });
-  }
 
   @Override
   public void onAttachedToEngine(@NonNull FlutterPluginBinding binding) {
@@ -96,7 +70,7 @@ public class VideoPlayerPlugin implements FlutterPlugin, AndroidVideoPlayerApi {
     }
     flutterState.stopListening(binding.getBinaryMessenger());
     flutterState = null;
-    initialize();
+    onDestroy();
   }
 
   private void disposeAllPlayers() {
@@ -106,7 +80,7 @@ public class VideoPlayerPlugin implements FlutterPlugin, AndroidVideoPlayerApi {
     videoPlayers.clear();
   }
 
-  private void onDestroy() {
+  public void onDestroy() {
     // The whole FlutterView is being destroyed. Here we release resources acquired for all
     // instances
     // of VideoPlayer. Once https://github.com/flutter/flutter/issues/19358 is resolved this may
@@ -120,13 +94,12 @@ public class VideoPlayerPlugin implements FlutterPlugin, AndroidVideoPlayerApi {
   }
 
   public @NonNull TextureMessage create(@NonNull CreateMessage arg) {
-    TextureRegistry.SurfaceTextureEntry handle =
-        flutterState.textureRegistry.createSurfaceTexture();
+    TextureRegistry.SurfaceProducer handle = flutterState.textureRegistry.createSurfaceProducer();
     EventChannel eventChannel =
         new EventChannel(
             flutterState.binaryMessenger, "flutter.io/videoPlayer/videoEvents" + handle.id());
 
-    VideoPlayer player;
+    final VideoAsset videoAsset;
     if (arg.getAsset() != null) {
       String assetLookupKey;
       if (arg.getPackageName() != null) {
@@ -135,28 +108,35 @@ public class VideoPlayerPlugin implements FlutterPlugin, AndroidVideoPlayerApi {
       } else {
         assetLookupKey = flutterState.keyForAsset.get(arg.getAsset());
       }
-      player =
-          new VideoPlayer(
-              flutterState.applicationContext,
-              eventChannel,
-              handle,
-              "asset:///" + assetLookupKey,
-              null,
-              new HashMap<>(),
-              options);
+      videoAsset = VideoAsset.fromAssetUrl("asset:///" + assetLookupKey);
+    } else if (arg.getUri().startsWith("rtsp://")) {
+      videoAsset = VideoAsset.fromRtspUrl(arg.getUri());
     } else {
-      Map<String, String> httpHeaders = arg.getHttpHeaders();
-      player =
-          new VideoPlayer(
-              flutterState.applicationContext,
-              eventChannel,
-              handle,
-              arg.getUri(),
-              arg.getFormatHint(),
-              httpHeaders,
-              options);
+      VideoAsset.StreamingFormat streamingFormat = VideoAsset.StreamingFormat.UNKNOWN;
+      String formatHint = arg.getFormatHint();
+      if (formatHint != null) {
+        switch (formatHint) {
+          case "ss":
+            streamingFormat = VideoAsset.StreamingFormat.SMOOTH;
+            break;
+          case "dash":
+            streamingFormat = VideoAsset.StreamingFormat.DYNAMIC_ADAPTIVE;
+            break;
+          case "hls":
+            streamingFormat = VideoAsset.StreamingFormat.HTTP_LIVE;
+            break;
+        }
+      }
+      videoAsset = VideoAsset.fromRemoteUrl(arg.getUri(), streamingFormat, arg.getHttpHeaders());
     }
-    videoPlayers.put(handle.id(), player);
+    videoPlayers.put(
+        handle.id(),
+        VideoPlayer.create(
+            flutterState.applicationContext,
+            VideoPlayerEventCallbacks.bindTo(eventChannel),
+            handle,
+            videoAsset,
+            options));
 
     return new TextureMessage.Builder().setTextureId(handle.id()).build();
   }

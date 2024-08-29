@@ -18,28 +18,65 @@ namespace test_plugin {
 
 using core_tests_pigeontest::AllClassesWrapper;
 using core_tests_pigeontest::AllNullableTypes;
+using core_tests_pigeontest::AllNullableTypesWithoutRecursion;
 using core_tests_pigeontest::AllTypes;
 using core_tests_pigeontest::AnEnum;
+using core_tests_pigeontest::AnotherEnum;
 using core_tests_pigeontest::ErrorOr;
 using core_tests_pigeontest::FlutterError;
 using core_tests_pigeontest::FlutterIntegrationCoreApi;
+using core_tests_pigeontest::FlutterSmallApi;
 using core_tests_pigeontest::HostIntegrationCoreApi;
+using core_tests_pigeontest::HostSmallApi;
 using flutter::EncodableList;
 using flutter::EncodableMap;
 using flutter::EncodableValue;
 
+TestSmallApi::TestSmallApi() {}
+
+TestSmallApi::~TestSmallApi() {}
+
+void TestSmallApi::Echo(
+    const std::string& a_string,
+    std::function<void(ErrorOr<std::string> reply)> result) {
+  result(a_string);
+}
+
+void TestSmallApi::VoidVoid(
+    std::function<void(std::optional<FlutterError> reply)> result) {
+  result(std::nullopt);
+}
+
 // static
 void TestPlugin::RegisterWithRegistrar(
     flutter::PluginRegistrarWindows* registrar) {
-  auto plugin = std::make_unique<TestPlugin>(registrar->messenger());
+  auto host_small_api_one = std::make_unique<TestSmallApi>();
+  auto host_small_api_two = std::make_unique<TestSmallApi>();
+
+  HostSmallApi::SetUp(registrar->messenger(), host_small_api_one.get(),
+                      "suffixOne");
+  HostSmallApi::SetUp(registrar->messenger(), host_small_api_two.get(),
+                      "suffixTwo");
+
+  auto plugin = std::make_unique<TestPlugin>(registrar->messenger(),
+                                             std::move(host_small_api_one),
+                                             std::move(host_small_api_two));
 
   HostIntegrationCoreApi::SetUp(registrar->messenger(), plugin.get());
 
   registrar->AddPlugin(std::move(plugin));
 }
 
-TestPlugin::TestPlugin(flutter::BinaryMessenger* binary_messenger)
-    : flutter_api_(
+TestPlugin::TestPlugin(flutter::BinaryMessenger* binary_messenger,
+                       std::unique_ptr<TestSmallApi> host_small_api_one,
+                       std::unique_ptr<TestSmallApi> host_small_api_two)
+    : flutter_small_api_one_(
+          std::make_unique<FlutterSmallApi>(binary_messenger, "suffixOne")),
+      flutter_small_api_two_(
+          std::make_unique<FlutterSmallApi>(binary_messenger, "suffixTwo")),
+      host_small_api_one_(std::move(host_small_api_one)),
+      host_small_api_two_(std::move(host_small_api_two)),
+      flutter_api_(
           std::make_unique<FlutterIntegrationCoreApi>(binary_messenger)) {}
 
 TestPlugin::~TestPlugin() {}
@@ -52,6 +89,15 @@ ErrorOr<AllTypes> TestPlugin::EchoAllTypes(const AllTypes& everything) {
 
 ErrorOr<std::optional<AllNullableTypes>> TestPlugin::EchoAllNullableTypes(
     const AllNullableTypes* everything) {
+  if (!everything) {
+    return std::nullopt;
+  }
+  return *everything;
+}
+
+ErrorOr<std::optional<AllNullableTypesWithoutRecursion>>
+TestPlugin::EchoAllNullableTypesWithoutRecursion(
+    const AllNullableTypesWithoutRecursion* everything) {
   if (!everything) {
     return std::nullopt;
   }
@@ -99,12 +145,26 @@ ErrorOr<EncodableMap> TestPlugin::EchoMap(const EncodableMap& a_map) {
   return a_map;
 }
 
+ErrorOr<EncodableMap> TestPlugin::EchoStringMap(
+    const EncodableMap& string_map) {
+  return string_map;
+}
+
+ErrorOr<EncodableMap> TestPlugin::EchoIntMap(const EncodableMap& int_map) {
+  return int_map;
+}
+
 ErrorOr<AllClassesWrapper> TestPlugin::EchoClassWrapper(
     const AllClassesWrapper& wrapper) {
   return wrapper;
 }
 
 ErrorOr<AnEnum> TestPlugin::EchoEnum(const AnEnum& an_enum) { return an_enum; }
+
+ErrorOr<AnotherEnum> TestPlugin::EchoAnotherEnum(
+    const AnotherEnum& another_enum) {
+  return another_enum;
+}
 
 ErrorOr<std::string> TestPlugin::EchoNamedDefaultString(
     const std::string& a_string) {
@@ -144,6 +204,24 @@ ErrorOr<AllNullableTypes> TestPlugin::SendMultipleNullableTypes(
     const bool* a_nullable_bool, const int64_t* a_nullable_int,
     const std::string* a_nullable_string) {
   AllNullableTypes someTypes;
+  someTypes.set_a_nullable_bool(a_nullable_bool);
+  someTypes.set_a_nullable_int(a_nullable_int);
+  // The string pointer can't be passed through directly since the setter for
+  // a string takes a std::string_view rather than std::string so the pointer
+  // types don't match.
+  if (a_nullable_string) {
+    someTypes.set_a_nullable_string(*a_nullable_string);
+  } else {
+    someTypes.set_a_nullable_string(nullptr);
+  }
+  return someTypes;
+};
+
+ErrorOr<AllNullableTypesWithoutRecursion>
+TestPlugin::SendMultipleNullableTypesWithoutRecursion(
+    const bool* a_nullable_bool, const int64_t* a_nullable_int,
+    const std::string* a_nullable_string) {
+  AllNullableTypesWithoutRecursion someTypes;
   someTypes.set_a_nullable_bool(a_nullable_bool);
   someTypes.set_a_nullable_int(a_nullable_int);
   // The string pointer can't be passed through directly since the setter for
@@ -214,11 +292,27 @@ ErrorOr<std::optional<EncodableList>> TestPlugin::EchoNullableList(
 };
 
 ErrorOr<std::optional<EncodableMap>> TestPlugin::EchoNullableMap(
-    const EncodableMap* a_nullable_map) {
-  if (!a_nullable_map) {
+    const EncodableMap* map) {
+  if (!map) {
     return std::nullopt;
   }
-  return *a_nullable_map;
+  return *map;
+};
+
+ErrorOr<std::optional<EncodableMap>> TestPlugin::EchoNullableStringMap(
+    const EncodableMap* string_map) {
+  if (!string_map) {
+    return std::nullopt;
+  }
+  return *string_map;
+};
+
+ErrorOr<std::optional<EncodableMap>> TestPlugin::EchoNullableIntMap(
+    const EncodableMap* int_map) {
+  if (!int_map) {
+    return std::nullopt;
+  }
+  return *int_map;
 };
 
 ErrorOr<std::optional<AnEnum>> TestPlugin::EchoNullableEnum(
@@ -227,6 +321,14 @@ ErrorOr<std::optional<AnEnum>> TestPlugin::EchoNullableEnum(
     return std::nullopt;
   }
   return *an_enum;
+}
+
+ErrorOr<std::optional<AnotherEnum>> TestPlugin::EchoAnotherNullableEnum(
+    const AnotherEnum* another_enum) {
+  if (!another_enum) {
+    return std::nullopt;
+  }
+  return *another_enum;
 }
 
 ErrorOr<std::optional<int64_t>> TestPlugin::EchoOptionalNullableInt(
@@ -310,14 +412,32 @@ void TestPlugin::EchoAsyncList(
 }
 
 void TestPlugin::EchoAsyncMap(
-    const EncodableMap& a_map,
+    const EncodableMap& map,
     std::function<void(ErrorOr<EncodableMap> reply)> result) {
-  result(a_map);
+  result(map);
+}
+
+void TestPlugin::EchoAsyncStringMap(
+    const EncodableMap& string_map,
+    std::function<void(ErrorOr<EncodableMap> reply)> result) {
+  result(string_map);
+}
+
+void TestPlugin::EchoAsyncIntMap(
+    const EncodableMap& int_map,
+    std::function<void(ErrorOr<EncodableMap> reply)> result) {
+  result(int_map);
 }
 
 void TestPlugin::EchoAsyncEnum(
     const AnEnum& an_enum, std::function<void(ErrorOr<AnEnum> reply)> result) {
   result(an_enum);
+}
+
+void TestPlugin::EchoAnotherAsyncEnum(
+    const AnotherEnum& another_enum,
+    std::function<void(ErrorOr<AnotherEnum> reply)> result) {
+  result(another_enum);
 }
 
 void TestPlugin::EchoAsyncNullableAllNullableTypes(
@@ -326,6 +446,16 @@ void TestPlugin::EchoAsyncNullableAllNullableTypes(
         result) {
   result(everything ? std::optional<AllNullableTypes>(*everything)
                     : std::nullopt);
+}
+
+void TestPlugin::EchoAsyncNullableAllNullableTypesWithoutRecursion(
+    const AllNullableTypesWithoutRecursion* everything,
+    std::function<
+        void(ErrorOr<std::optional<AllNullableTypesWithoutRecursion>> reply)>
+        result) {
+  result(everything
+             ? std::optional<AllNullableTypesWithoutRecursion>(*everything)
+             : std::nullopt);
 }
 
 void TestPlugin::EchoAsyncNullableInt(
@@ -373,15 +503,34 @@ void TestPlugin::EchoAsyncNullableList(
 }
 
 void TestPlugin::EchoAsyncNullableMap(
-    const EncodableMap* a_map,
+    const EncodableMap* map,
     std::function<void(ErrorOr<std::optional<EncodableMap>> reply)> result) {
-  result(a_map ? std::optional<EncodableMap>(*a_map) : std::nullopt);
+  result(map ? std::optional<EncodableMap>(*map) : std::nullopt);
+}
+
+void TestPlugin::EchoAsyncNullableStringMap(
+    const EncodableMap* string_map,
+    std::function<void(ErrorOr<std::optional<EncodableMap>> reply)> result) {
+  result(string_map ? std::optional<EncodableMap>(*string_map) : std::nullopt);
+}
+
+void TestPlugin::EchoAsyncNullableIntMap(
+    const EncodableMap* int_map,
+    std::function<void(ErrorOr<std::optional<EncodableMap>> reply)> result) {
+  result(int_map ? std::optional<EncodableMap>(*int_map) : std::nullopt);
 }
 
 void TestPlugin::EchoAsyncNullableEnum(
     const AnEnum* an_enum,
     std::function<void(ErrorOr<std::optional<AnEnum>> reply)> result) {
   result(an_enum ? std::optional<AnEnum>(*an_enum) : std::nullopt);
+}
+
+void TestPlugin::EchoAnotherAsyncNullableEnum(
+    const AnotherEnum* another_enum,
+    std::function<void(ErrorOr<std::optional<AnotherEnum>> reply)> result) {
+  result(another_enum ? std::optional<AnotherEnum>(*another_enum)
+                      : std::nullopt);
 }
 
 void TestPlugin::CallFlutterNoop(
@@ -437,6 +586,31 @@ void TestPlugin::CallFlutterSendMultipleNullableTypes(
       [result](const FlutterError& error) { result(error); });
 }
 
+void TestPlugin::CallFlutterEchoAllNullableTypesWithoutRecursion(
+    const AllNullableTypesWithoutRecursion* everything,
+    std::function<
+        void(ErrorOr<std::optional<AllNullableTypesWithoutRecursion>> reply)>
+        result) {
+  flutter_api_->EchoAllNullableTypesWithoutRecursion(
+      everything,
+      [result](const AllNullableTypesWithoutRecursion* echo) {
+        result(echo ? std::optional<AllNullableTypesWithoutRecursion>(*echo)
+                    : std::nullopt);
+      },
+      [result](const FlutterError& error) { result(error); });
+}
+
+void TestPlugin::CallFlutterSendMultipleNullableTypesWithoutRecursion(
+    const bool* a_nullable_bool, const int64_t* a_nullable_int,
+    const std::string* a_nullable_string,
+    std::function<void(ErrorOr<AllNullableTypesWithoutRecursion> reply)>
+        result) {
+  flutter_api_->SendMultipleNullableTypesWithoutRecursion(
+      a_nullable_bool, a_nullable_int, a_nullable_string,
+      [result](const AllNullableTypesWithoutRecursion& echo) { result(echo); },
+      [result](const FlutterError& error) { result(error); });
+}
+
 void TestPlugin::CallFlutterEchoBool(
     bool a_bool, std::function<void(ErrorOr<bool> reply)> result) {
   flutter_api_->EchoBool(
@@ -483,10 +657,26 @@ void TestPlugin::CallFlutterEchoList(
 }
 
 void TestPlugin::CallFlutterEchoMap(
-    const EncodableMap& a_map,
+    const EncodableMap& map,
     std::function<void(ErrorOr<EncodableMap> reply)> result) {
   flutter_api_->EchoMap(
-      a_map, [result](const EncodableMap& echo) { result(echo); },
+      map, [result](const EncodableMap& echo) { result(echo); },
+      [result](const FlutterError& error) { result(error); });
+}
+
+void TestPlugin::CallFlutterEchoStringMap(
+    const EncodableMap& string_map,
+    std::function<void(ErrorOr<EncodableMap> reply)> result) {
+  flutter_api_->EchoStringMap(
+      string_map, [result](const EncodableMap& echo) { result(echo); },
+      [result](const FlutterError& error) { result(error); });
+}
+
+void TestPlugin::CallFlutterEchoIntMap(
+    const EncodableMap& int_map,
+    std::function<void(ErrorOr<EncodableMap> reply)> result) {
+  flutter_api_->EchoIntMap(
+      int_map, [result](const EncodableMap& echo) { result(echo); },
       [result](const FlutterError& error) { result(error); });
 }
 
@@ -494,6 +684,14 @@ void TestPlugin::CallFlutterEchoEnum(
     const AnEnum& an_enum, std::function<void(ErrorOr<AnEnum> reply)> result) {
   flutter_api_->EchoEnum(
       an_enum, [result](const AnEnum& echo) { result(echo); },
+      [result](const FlutterError& error) { result(error); });
+}
+
+void TestPlugin::CallFlutterEchoAnotherEnum(
+    const AnotherEnum& another_enum,
+    std::function<void(ErrorOr<AnotherEnum> reply)> result) {
+  flutter_api_->EchoAnotherEnum(
+      another_enum, [result](const AnotherEnum& echo) { result(echo); },
       [result](const FlutterError& error) { result(error); });
 }
 
@@ -566,10 +764,32 @@ void TestPlugin::CallFlutterEchoNullableList(
 }
 
 void TestPlugin::CallFlutterEchoNullableMap(
-    const EncodableMap* a_map,
+    const EncodableMap* map,
     std::function<void(ErrorOr<std::optional<EncodableMap>> reply)> result) {
   flutter_api_->EchoNullableMap(
-      a_map,
+      map,
+      [result](const EncodableMap* echo) {
+        result(echo ? std::optional<EncodableMap>(*echo) : std::nullopt);
+      },
+      [result](const FlutterError& error) { result(error); });
+}
+
+void TestPlugin::CallFlutterEchoNullableStringMap(
+    const EncodableMap* string_map,
+    std::function<void(ErrorOr<std::optional<EncodableMap>> reply)> result) {
+  flutter_api_->EchoNullableStringMap(
+      string_map,
+      [result](const EncodableMap* echo) {
+        result(echo ? std::optional<EncodableMap>(*echo) : std::nullopt);
+      },
+      [result](const FlutterError& error) { result(error); });
+}
+
+void TestPlugin::CallFlutterEchoNullableIntMap(
+    const EncodableMap* int_map,
+    std::function<void(ErrorOr<std::optional<EncodableMap>> reply)> result) {
+  flutter_api_->EchoNullableIntMap(
+      int_map,
       [result](const EncodableMap* echo) {
         result(echo ? std::optional<EncodableMap>(*echo) : std::nullopt);
       },
@@ -583,6 +803,41 @@ void TestPlugin::CallFlutterEchoNullableEnum(
       an_enum,
       [result](const AnEnum* echo) {
         result(echo ? std::optional<AnEnum>(*echo) : std::nullopt);
+      },
+      [result](const FlutterError& error) { result(error); });
+}
+
+void TestPlugin::CallFlutterEchoAnotherNullableEnum(
+    const AnotherEnum* another_enum,
+    std::function<void(ErrorOr<std::optional<AnotherEnum>> reply)> result) {
+  flutter_api_->EchoAnotherNullableEnum(
+      another_enum,
+      [result](const AnotherEnum* echo) {
+        result(echo ? std::optional<AnotherEnum>(*echo) : std::nullopt);
+      },
+      [result](const FlutterError& error) { result(error); });
+}
+
+void TestPlugin::CallFlutterSmallApiEchoString(
+    const std::string& a_string,
+    std::function<void(ErrorOr<std::string> reply)> result) {
+  flutter_small_api_one_->EchoString(
+      a_string,
+      [this, result, a_string](const std::string& echoOne) {
+        flutter_small_api_two_->EchoString(
+            a_string,
+            [this, result, echoOne](const std::string& echoTwo) {
+              if (echoOne.compare(echoTwo) == 0) {
+                result(echoTwo);
+              } else {
+                result(FlutterError(
+                    "Responses do not match",
+                    "Multi-instance responses were not matching: " + echoOne +
+                        ", " + echoTwo,
+                    EncodableValue("")));
+              }
+            },
+            [result](const FlutterError& error) { result(error); });
       },
       [result](const FlutterError& error) { result(error); });
 }
