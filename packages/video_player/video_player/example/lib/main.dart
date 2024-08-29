@@ -6,6 +6,8 @@
 
 /// An example of using the plugin, controlling lifecycle and playback of the
 /// video.
+/// 
+/// 
 library;
 
 import 'package:flutter/material.dart';
