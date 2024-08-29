@@ -4,6 +4,7 @@
 
 package io.flutter.plugins.videoplayer;
 
+import android.os.CountDownTimer;
 import androidx.annotation.NonNull;
 import androidx.media3.common.PlaybackException;
 import androidx.media3.common.Player;
@@ -15,10 +16,17 @@ final class ExoPlayerEventListener implements Player.Listener {
   private final VideoPlayerCallbacks events;
   private boolean isBuffering = false;
   private boolean isInitialized = false;
+  private boolean isLoadingNewAsset = false;
+  private CountDownTimer countdown;
 
   ExoPlayerEventListener(ExoPlayer exoPlayer, VideoPlayerCallbacks events) {
     this.exoPlayer = exoPlayer;
     this.events = events;
+
+    this.countdown = new CountDownTimer(1000, 1000) {
+      public void onTick(long millisUntilFinished) {}
+      public void onFinish() {}
+  };
   }
 
   private void setBuffering(boolean buffering) {
@@ -34,11 +42,7 @@ final class ExoPlayerEventListener implements Player.Listener {
   }
 
   @SuppressWarnings("SuspiciousNameCombination")
-  private void sendInitialized() {
-    if (isInitialized) {
-      return;
-    }
-    isInitialized = true;
+  private void sendInitialized(String eventName) {
     VideoSize videoSize = exoPlayer.getVideoSize();
     int rotationCorrection = 0;
     int width = videoSize.width;
@@ -58,7 +62,7 @@ final class ExoPlayerEventListener implements Player.Listener {
         rotationCorrection = rotationDegrees;
       }
     }
-    events.onInitialized(width, height, exoPlayer.getDuration(), rotationCorrection);
+    events.onInitialized(width, height, exoPlayer.getDuration(), rotationCorrection, eventName);
   }
 
   @Override
@@ -69,7 +73,17 @@ final class ExoPlayerEventListener implements Player.Listener {
         events.onBufferingUpdate(exoPlayer.getBufferedPosition());
         break;
       case Player.STATE_READY:
-        sendInitialized();
+        if (isLoadingNewAsset && isInitialized) {
+          isLoadingNewAsset = false;
+          countdown.cancel();
+          sendInitialized("reloadingEnd");
+        } else {
+          if (isInitialized) {
+            return;
+          }
+          isInitialized = true;
+          sendInitialized("initialized");
+        }
         break;
       case Player.STATE_ENDED:
         events.onCompleted();
@@ -97,5 +111,19 @@ final class ExoPlayerEventListener implements Player.Listener {
   @Override
   public void onIsPlayingChanged(boolean isPlaying) {
     events.onIsPlayingStateUpdate(isPlaying);
+  }
+
+  public void onReloadingStart() {
+    countdown.cancel();
+    countdown = new CountDownTimer(8000, 8000) {
+
+        public void onTick(long millisUntilFinished) {}
+
+        public void onFinish() {
+          events.onError("VideoError", "Video player timed out, no events", null);
+        }
+    }.start();
+    isLoadingNewAsset = true;
+    events.onReloadingStart();
   }
 }

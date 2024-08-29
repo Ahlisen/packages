@@ -72,18 +72,14 @@ class AVFoundationVideoPlayer extends VideoPlayerPlatform {
       case DataSourceType.asset:
         asset = dataSource.asset;
         packageName = dataSource.package;
-        break;
       case DataSourceType.network:
         uri = dataSource.uri;
         formatHint = _videoFormatStringMap[dataSource.formatHint];
         httpHeaders = dataSource.httpHeaders;
-        break;
       case DataSourceType.file:
         uri = dataSource.uri;
-        break;
       case DataSourceType.contentUri:
         uri = dataSource.uri;
-        break;
     }
     final LoadMessage message = LoadMessage(
       textureId: textureId,

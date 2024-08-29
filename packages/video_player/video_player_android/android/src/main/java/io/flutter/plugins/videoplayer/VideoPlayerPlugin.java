@@ -144,6 +144,7 @@ public class VideoPlayerPlugin implements FlutterPlugin, AndroidVideoPlayerApi {
   public void load(@NonNull LoadMessage arg) {
     VideoPlayer player = videoPlayers.get(arg.getTextureId());
 
+    final VideoAsset videoAsset;
     if (arg.getAsset() != null) {
       String assetLookupKey;
       if (arg.getPackageName() != null) {
@@ -152,19 +153,31 @@ public class VideoPlayerPlugin implements FlutterPlugin, AndroidVideoPlayerApi {
       } else {
         assetLookupKey = flutterState.keyForAsset.get(arg.getAsset());
       }
-      player.loadAsset(
-              flutterState.applicationContext,
-              "asset:///" + assetLookupKey,
-              null,
-              new HashMap<>());             
+      videoAsset = VideoAsset.fromAssetUrl("asset:///" + assetLookupKey);
+    } else if (arg.getUri().startsWith("rtsp://")) {
+      videoAsset = VideoAsset.fromRtspUrl(arg.getUri());
     } else {
-      Map<String, String> httpHeaders = arg.getHttpHeaders();
-      player.loadAsset(
-              flutterState.applicationContext,
-              arg.getUri(),
-              arg.getFormatHint(),
-              httpHeaders);
+      VideoAsset.StreamingFormat streamingFormat = VideoAsset.StreamingFormat.UNKNOWN;
+      String formatHint = arg.getFormatHint();
+      if (formatHint != null) {
+        switch (formatHint) {
+          case "ss":
+            streamingFormat = VideoAsset.StreamingFormat.SMOOTH;
+            break;
+          case "dash":
+            streamingFormat = VideoAsset.StreamingFormat.DYNAMIC_ADAPTIVE;
+            break;
+          case "hls":
+            streamingFormat = VideoAsset.StreamingFormat.HTTP_LIVE;
+            break;
+        }
+      }
+      videoAsset = VideoAsset.fromRemoteUrl(arg.getUri(), streamingFormat, arg.getHttpHeaders());
     }
+
+    player.loadAsset(
+              flutterState.applicationContext,
+              videoAsset);
   }
 
   public void dispose(@NonNull TextureMessage arg) {
