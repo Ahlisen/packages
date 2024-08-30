@@ -30,13 +30,13 @@ dependencies:
     git: 
       url: https://github.com/Ahlisen/packages
       path: packages/video_player/video_player_android
-      ref: 63b1501a2cfc51c829ae31b8c880353e44c11ecf
+      ref: 1caefa38f0f1861f8cdbdc31df58413854ff4e52
     #path: ../video_player_android
   video_player_avfoundation: 
     git: 
       url: https://github.com/Ahlisen/packages
       path: packages/video_player/video_player_avfoundation
-      ref: 63b1501a2cfc51c829ae31b8c880353e44c11ecf
+      ref: 1caefa38f0f1861f8cdbdc31df58413854ff4e52
     #path: ../video_player_avfoundation
   video_player_platform_interface:
     git: 
@@ -48,7 +48,7 @@ dependencies:
     git: 
       url: https://github.com/Ahlisen/packages
       path: packages/video_player/video_player_web
-      ref: 63b1501a2cfc51c829ae31b8c880353e44c11ecf
+      ref: 1caefa38f0f1861f8cdbdc31df58413854ff4e52
     #path: ../video_player_web
 
 dev_dependencies:
