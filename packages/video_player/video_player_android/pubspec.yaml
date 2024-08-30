@@ -22,11 +22,11 @@ dependencies:
   flutter:
     sdk: flutter
   video_player_platform_interface:
-    #path: ../video_player_platform_interface
     git: 
       url: https://github.com/Ahlisen/packages
       path: packages/video_player/video_player_platform_interface
-      ref: 338a120792cc6e9f2a2aeca23ab13e162f33f102
+      ref: 551ee97c0899b55dcca624271337fd666cc379c9
+    #path: ../video_player_platform_interface
 
 dev_dependencies:
   flutter_test:
