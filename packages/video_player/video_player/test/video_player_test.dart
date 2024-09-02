@@ -88,7 +88,7 @@ class FakeController extends ValueNotifier<VideoPlayerValue>
   ) async {}
   
   @override
-  set dataSource(String _dataSource) {
+  set dataSource(String dataSource) {
   }
   
   @override
@@ -1075,6 +1075,7 @@ void main() {
           'captionOffset: 0:00:00.250000, '
           'buffered: [DurationRange(start: 0:00:00.000000, end: 0:00:04.000000)], '
           'isInitialized: true, '
+          'isReadyToDisplay: false, '
           'isPlaying: true, '
           'isLooping: true, '
           'isBuffering: true, '
