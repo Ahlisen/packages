@@ -26,26 +26,26 @@ dependencies:
   flutter:
     sdk: flutter
   html: ^0.15.0
-  video_player_android: 
-    git: 
+  video_player_android:
+    git:
       url: https://github.com/Ahlisen/packages
       path: packages/video_player/video_player_android
-      ref: fe5f19ff635f13dae687f3663a2171408e4f3a57
-  video_player_avfoundation: 
-    git: 
+      ref: cfbafe4343a0c9af797b144f2812cadf67246384
+  video_player_avfoundation:
+    git:
       url: https://github.com/Ahlisen/packages
       path: packages/video_player/video_player_avfoundation
-      ref: fe5f19ff635f13dae687f3663a2171408e4f3a57
+      ref: cfbafe4343a0c9af797b144f2812cadf67246384
   video_player_platform_interface:
-    git: 
+    git:
       url: https://github.com/Ahlisen/packages
       path: packages/video_player/video_player_platform_interface
-      ref: 551ee97c0899b55dcca624271337fd666cc379c9
+      ref: cfbafe4343a0c9af797b144f2812cadf67246384
   video_player_web:
-    git: 
+    git:
       url: https://github.com/Ahlisen/packages
       path: packages/video_player/video_player_web
-      ref: fe5f19ff635f13dae687f3663a2171408e4f3a57
+      ref: cfbafe4343a0c9af797b144f2812cadf67246384
 
 dev_dependencies:
   flutter_test:
