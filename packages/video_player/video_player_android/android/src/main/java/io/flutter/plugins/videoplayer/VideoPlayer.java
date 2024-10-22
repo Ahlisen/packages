@@ -87,9 +87,11 @@ final class VideoPlayer implements TextureRegistry.SurfaceProducer.Callback {
   }
 
   @RestrictTo(RestrictTo.Scope.LIBRARY)
+  // TODO(matanlurey): https://github.com/flutter/flutter/issues/155131.
+  @SuppressWarnings({"deprecation", "removal"})
   public void onSurfaceCreated() {
-    exoPlayer = createVideoPlayer();
     if (savedStateDuring != null) {
+      exoPlayer = createVideoPlayer();
       savedStateDuring.restore(exoPlayer);
       savedStateDuring = null;
     }
@@ -97,7 +99,8 @@ final class VideoPlayer implements TextureRegistry.SurfaceProducer.Callback {
 
   @RestrictTo(RestrictTo.Scope.LIBRARY)
   public void onSurfaceDestroyed() {
-    exoPlayer.stop();
+    // Intentionally do not call pause/stop here, because the surface has already been released
+    // at this point (see https://github.com/flutter/flutter/issues/156451).
     savedStateDuring = ExoPlayerState.save(exoPlayer);
     exoPlayer.release();
   }
@@ -108,7 +111,13 @@ final class VideoPlayer implements TextureRegistry.SurfaceProducer.Callback {
     exoPlayer.prepare();
 
     exoPlayer.setVideoSurface(surfaceProducer.getSurface());
-    exoPlayerEventListener = new ExoPlayerEventListener(exoPlayer, videoPlayerEvents);
+
+    boolean wasInitialized = savedStateDuring != null;
+    exoPlayerEventListener = new ExoPlayerEventListener(
+        exoPlayer,
+        videoPlayerEvents,
+        wasInitialized
+    );
     exoPlayer.addListener(exoPlayerEventListener);
     setAudioAttributes(exoPlayer, options.mixWithOthers);
 
@@ -125,30 +134,13 @@ final class VideoPlayer implements TextureRegistry.SurfaceProducer.Callback {
         !isMixMode);
   }
 
-  // class Running extends TimerTask {
-  //     @Override
-  //     public void run() {
-  //       if (eventSink != null) {
-  //         eventSink.error("VideoError", "Video player timed out", null);
-  //         //System.out.println("FOO JAVA TIMER TIMEDOUT " + uri);
-  //       }
-  //     }
-  //  }
-
   void loadAsset(
       Context context,
       @NonNull VideoAsset asset) {
-        
     mediaItem = asset.getMediaItem();
     exoPlayer.setMediaItem(mediaItem);
     exoPlayer.prepare();
     exoPlayerEventListener.onReloadingStart();
-
-    //boolean hej = exoPlayer.getPlaybackLooper().getThread().isAlive();
-    //System.out.println("FOO JAVA reloadStart check thread isalive " + hej + " uri:" + uri);
-
-
-    //System.out.println("FOO JAVA timer started uri:" + uri);
   }
 
   void play() {
@@ -185,7 +177,11 @@ final class VideoPlayer implements TextureRegistry.SurfaceProducer.Callback {
   }
 
   void dispose() {
-    surfaceProducer.release();
     exoPlayer.release();
+    surfaceProducer.release();
+
+    // TODO(matanlurey): Remove when embedder no longer calls-back once released.
+    // https://github.com/flutter/flutter/issues/156434.
+    surfaceProducer.setCallback(null);
   }
 }

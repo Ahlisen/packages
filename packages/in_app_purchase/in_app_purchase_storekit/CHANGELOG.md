@@ -1,3 +1,15 @@
+## 0.3.18+3
+
+* Updates Pigeon for non-nullable collection type support.
+
+## 0.3.18+2
+
+* Adds support for StoreKit2's `purchase` and `transactions`
+
+## 0.3.18+1
+
+* Adds support for StoreKit2's `canMakePayments` and `products`
+
 ## 0.3.18
 
 * Updates minimum supported SDK version to Flutter 3.19/Dart 3.3.
@@ -45,7 +57,7 @@
 
 ## 0.3.12
 
-* Converts `refreshReceipt()`, `startObservingPaymentQueue()`, `stopObservingPaymentQueue()`, 
+* Converts `refreshReceipt()`, `startObservingPaymentQueue()`, `stopObservingPaymentQueue()`,
 `registerPaymentQueueDelegate()`, `removePaymentQueueDelegate()`, `showPriceConsentIfNeeded()` to pigeon.
 
 ## 0.3.11
@@ -72,7 +84,7 @@
 
 ## 0.3.7
 
-* Adds `Future<SKStorefrontWrapper?> storefront()` in SKPaymentQueueWrapper class. 
+* Adds `Future<SKStorefrontWrapper?> storefront()` in SKPaymentQueueWrapper class.
 
 ## 0.3.6+7
 
