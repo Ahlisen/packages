@@ -416,14 +416,6 @@ NS_INLINE CGFloat radiansToDegrees(CGFloat radians) {
 - (void)outputMediaDataWillChange:(AVPlayerItemOutput *)sender
 {
     self.waitingForFrame = YES;
-
-    NSTimeInterval delayInSeconds = 0.05;
-    dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delayInSeconds * NSEC_PER_SEC));
-    __weak FVPVideoPlayer *weakSelf = self;
-    dispatch_after(popTime, dispatch_get_main_queue(), ^(void){
-        weakSelf.displayLink.running = YES;
-    });
-
 }
 
 - (void)updatePlayingState {
@@ -438,6 +430,19 @@ NS_INLINE CGFloat radiansToDegrees(CGFloat radians) {
   // If the texture is still waiting for an expected frame, the display link needs to keep
   // running until it arrives regardless of the play/pause state.
   _displayLink.running = _isPlaying || self.waitingForFrame;
+
+  // Timeout for displaying the first frame. As long as we call on textureFrameAvailable before this timeout,
+  // the engine will correctly trigger copyPixelBuffer when the FlutterTexture is instantiated.
+  if (self.waitingForFrame) {
+    NSTimeInterval delayInSeconds = 0.2;
+    dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delayInSeconds * NSEC_PER_SEC));
+    __weak FVPVideoPlayer *weakSelf = self;
+    dispatch_after(popTime, dispatch_get_main_queue(), ^(void){
+        if (!weakSelf.isPlaying) {
+            weakSelf.displayLink.running = NO;
+        }
+    });
+  }
 }
 
 - (void)setupEventSinkIfReadyToPlay {
