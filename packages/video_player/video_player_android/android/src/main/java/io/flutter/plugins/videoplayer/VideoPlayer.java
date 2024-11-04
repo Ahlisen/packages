@@ -16,6 +16,7 @@ import androidx.media3.common.AudioAttributes;
 import androidx.media3.common.C;
 import androidx.media3.common.MediaItem;
 import androidx.media3.common.PlaybackParameters;
+import androidx.media3.exoplayer.DefaultLoadControl;
 import androidx.media3.exoplayer.ExoPlayer;
 import io.flutter.view.TextureRegistry;
 
@@ -57,7 +58,7 @@ final class VideoPlayer implements TextureRegistry.SurfaceProducer.Callback {
                   /* bufferForPlaybackMs= */ 500,
                   /* bufferForPlaybackAfterRebufferMs= */ 1_000
               )
-              .createDefaultLoadControl();
+              .build();
           ExoPlayer.Builder builder =
                   new ExoPlayer.Builder(context)
                           .setMediaSourceFactory(asset.getMediaSourceFactory(context))
