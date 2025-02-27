@@ -1,6 +1,12 @@
-## NEXT
+## 2.10.1
 
-* Updates minimum supported SDK version to Flutter 3.19/Dart 3.3.
+* Updates READMEs and API docs.
+* Updates minimum supported SDK version to Flutter 3.22/Dart 3.4.
+
+## 2.10.0
+
+* Updates minimum supported SDK version to Flutter 3.22/Dart 3.4.
+* Fixes detection of WebAssembly support on package site.
 
 ## 2.9.0
 
