@@ -52,9 +52,20 @@ public final class TextureVideoPlayer extends VideoPlayer implements SurfaceProd
         asset.getMediaItem(),
         options,
         () -> {
+          // Custom load control for quicker buffering
+          DefaultLoadControl loadControl = new DefaultLoadControl
+            .Builder()
+            .setBufferDurationsMs(
+              /* minBufferMs= */ 1_000,
+              /* maxBufferMs= */ 60_000,
+              /* bufferForPlaybackMs= */ 500,
+              /* bufferForPlaybackAfterRebufferMs= */ 1_000
+            )
+            .build();
           ExoPlayer.Builder builder =
               new ExoPlayer.Builder(context)
-                  .setMediaSourceFactory(asset.getMediaSourceFactory(context));
+                  .setMediaSourceFactory(asset.getMediaSourceFactory(context))
+                  .setLoadControl(loadControl);
           return builder.build();
         });
   }
