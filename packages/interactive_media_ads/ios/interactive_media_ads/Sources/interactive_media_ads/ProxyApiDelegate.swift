@@ -14,6 +14,14 @@ open class ProxyApiDelegate: InteractiveMediaAdsLibraryPigeonProxyApiDelegate {
       details: nil)
   }
 
+  /// Creates an error when the constructor of a class returns null.
+  func createConstructorNullError(type: Any.Type, parameters: [String: Any?]) -> PigeonError {
+    return PigeonError(
+      code: "ConstructorReturnedNullError",
+      message: "Failed to instantiate `\(String(describing: type))` with parameters: \(parameters)",
+      details: nil)
+  }
+
   func pigeonApiUIView(_ registrar: InteractiveMediaAdsLibraryPigeonProxyApiRegistrar)
     -> PigeonApiUIView
   {
@@ -130,5 +138,44 @@ open class ProxyApiDelegate: InteractiveMediaAdsLibraryPigeonProxyApiDelegate {
   {
     return PigeonApiIMACompanionAd(
       pigeonRegistrar: registrar, delegate: CompanionAdProxyAPIDelegate())
+  }
+
+  func pigeonApiIMACompanionAdSlot(_ registrar: InteractiveMediaAdsLibraryPigeonProxyApiRegistrar)
+    -> PigeonApiIMACompanionAdSlot
+  {
+    return PigeonApiIMACompanionAdSlot(
+      pigeonRegistrar: registrar, delegate: CompanionAdSlotProxyAPIDelegate())
+  }
+
+  func pigeonApiIMACompanionDelegate(_ registrar: InteractiveMediaAdsLibraryPigeonProxyApiRegistrar)
+    -> PigeonApiIMACompanionDelegate
+  {
+    return PigeonApiIMACompanionDelegate(
+      pigeonRegistrar: registrar, delegate: CompanionDelegateProxyAPIDelegate())
+  }
+
+  func pigeonApiIMAAdPodInfo(_ registrar: InteractiveMediaAdsLibraryPigeonProxyApiRegistrar)
+    -> PigeonApiIMAAdPodInfo
+  {
+    return PigeonApiIMAAdPodInfo(pigeonRegistrar: registrar, delegate: AdPodInfoProxyAPIDelegate())
+  }
+
+  func pigeonApiIMASettings(_ registrar: InteractiveMediaAdsLibraryPigeonProxyApiRegistrar)
+    -> PigeonApiIMASettings
+  {
+    return PigeonApiIMASettings(pigeonRegistrar: registrar, delegate: SettingsProxyAPIDelegate())
+  }
+
+  func pigeonApiIMAAd(_ registrar: InteractiveMediaAdsLibraryPigeonProxyApiRegistrar)
+    -> PigeonApiIMAAd
+  {
+    return PigeonApiIMAAd(pigeonRegistrar: registrar, delegate: AdProxyAPIDelegate())
+  }
+
+  func pigeonApiIMAUniversalAdID(_ registrar: InteractiveMediaAdsLibraryPigeonProxyApiRegistrar)
+    -> PigeonApiIMAUniversalAdID
+  {
+    return PigeonApiIMAUniversalAdID(
+      pigeonRegistrar: registrar, delegate: UniversalAdIDProxyAPIDelegate())
   }
 }

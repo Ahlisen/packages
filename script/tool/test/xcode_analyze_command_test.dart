@@ -4,10 +4,10 @@
 
 import 'package:args/command_runner.dart';
 import 'package:file/file.dart';
-import 'package:file/memory.dart';
 import 'package:flutter_plugin_tools/src/common/core.dart';
 import 'package:flutter_plugin_tools/src/common/plugin_utils.dart';
 import 'package:flutter_plugin_tools/src/xcode_analyze_command.dart';
+import 'package:git/git.dart';
 import 'package:test/test.dart';
 
 import 'mocks.dart';
@@ -17,19 +17,23 @@ import 'util.dart';
 // doing all the process mocking and validation.
 void main() {
   group('test xcode_analyze_command', () {
-    late FileSystem fileSystem;
     late MockPlatform mockPlatform;
     late Directory packagesDir;
     late CommandRunner<void> runner;
     late RecordingProcessRunner processRunner;
+    late RecordingProcessRunner gitProcessRunner;
 
     setUp(() {
-      fileSystem = MemoryFileSystem();
       mockPlatform = MockPlatform(isMacOS: true);
-      packagesDir = createPackagesDirectory(fileSystem: fileSystem);
-      processRunner = RecordingProcessRunner();
-      final XcodeAnalyzeCommand command = XcodeAnalyzeCommand(packagesDir,
-          processRunner: processRunner, platform: mockPlatform);
+      final GitDir gitDir;
+      (:packagesDir, :processRunner, :gitProcessRunner, :gitDir) =
+          configureBaseCommandMocks(platform: mockPlatform);
+      final XcodeAnalyzeCommand command = XcodeAnalyzeCommand(
+        packagesDir,
+        processRunner: processRunner,
+        platform: mockPlatform,
+        gitDir: gitDir,
+      );
 
       runner = CommandRunner<void>(
           'xcode_analyze_command', 'Test for xcode_analyze_command');
@@ -50,6 +54,36 @@ void main() {
           contains('At least one platform flag must be provided'),
         ]),
       );
+    });
+
+    test('temporarily disables Swift Package Manager', () async {
+      final RepositoryPackage plugin = createFakePlugin('plugin', packagesDir,
+          platformSupport: <String, PlatformDetails>{
+            platformIOS: const PlatformDetails(PlatformSupport.inline),
+          });
+
+      final RepositoryPackage example = plugin.getExamples().first;
+      final String originalPubspecContents =
+          example.pubspecFile.readAsStringSync();
+      String? buildTimePubspecContents;
+      processRunner.mockProcessesForExecutable['xcrun'] = <FakeProcessInfo>[
+        FakeProcessInfo(MockProcess(), <String>[], () {
+          buildTimePubspecContents = example.pubspecFile.readAsStringSync();
+        })
+      ];
+
+      await runCapturingPrint(runner, <String>[
+        'xcode-analyze',
+        '--ios',
+      ]);
+
+      // Ensure that SwiftPM was disabled for the package.
+      expect(originalPubspecContents,
+          isNot(contains('enable-swift-package-manager: false')));
+      expect(buildTimePubspecContents,
+          contains('enable-swift-package-manager: false'));
+      // And that it was undone after.
+      expect(example.pubspecFile.readAsStringSync(), originalPubspecContents);
     });
 
     group('iOS', () {
@@ -103,6 +137,15 @@ void main() {
             processRunner.recordedCalls,
             orderedEquals(<ProcessCall>[
               ProcessCall(
+                  'flutter',
+                  const <String>[
+                    'build',
+                    'ios',
+                    '--debug',
+                    '--config-only',
+                  ],
+                  pluginExampleDirectory.path),
+              ProcessCall(
                   'xcrun',
                   const <String>[
                     'xcodebuild',
@@ -143,6 +186,15 @@ void main() {
         expect(
             processRunner.recordedCalls,
             orderedEquals(<ProcessCall>[
+              ProcessCall(
+                  'flutter',
+                  const <String>[
+                    'build',
+                    'ios',
+                    '--debug',
+                    '--config-only',
+                  ],
+                  pluginExampleDirectory.path),
               ProcessCall(
                   'xcrun',
                   const <String>[
@@ -243,6 +295,15 @@ void main() {
             processRunner.recordedCalls,
             orderedEquals(<ProcessCall>[
               ProcessCall(
+                  'flutter',
+                  const <String>[
+                    'build',
+                    'macos',
+                    '--debug',
+                    '--config-only',
+                  ],
+                  pluginExampleDirectory.path),
+              ProcessCall(
                   'xcrun',
                   const <String>[
                     'xcodebuild',
@@ -277,6 +338,15 @@ void main() {
         expect(
             processRunner.recordedCalls,
             orderedEquals(<ProcessCall>[
+              ProcessCall(
+                  'flutter',
+                  const <String>[
+                    'build',
+                    'macos',
+                    '--debug',
+                    '--config-only',
+                  ],
+                  pluginExampleDirectory.path),
               ProcessCall(
                   'xcrun',
                   const <String>[
@@ -351,6 +421,15 @@ void main() {
             processRunner.recordedCalls,
             orderedEquals(<ProcessCall>[
               ProcessCall(
+                  'flutter',
+                  const <String>[
+                    'build',
+                    'ios',
+                    '--debug',
+                    '--config-only',
+                  ],
+                  pluginExampleDirectory.path),
+              ProcessCall(
                   'xcrun',
                   const <String>[
                     'xcodebuild',
@@ -365,6 +444,15 @@ void main() {
                     '-destination',
                     'generic/platform=iOS Simulator',
                     'GCC_TREAT_WARNINGS_AS_ERRORS=YES',
+                  ],
+                  pluginExampleDirectory.path),
+              ProcessCall(
+                  'flutter',
+                  const <String>[
+                    'build',
+                    'macos',
+                    '--debug',
+                    '--config-only',
                   ],
                   pluginExampleDirectory.path),
               ProcessCall(
@@ -409,6 +497,15 @@ void main() {
             processRunner.recordedCalls,
             orderedEquals(<ProcessCall>[
               ProcessCall(
+                  'flutter',
+                  const <String>[
+                    'build',
+                    'macos',
+                    '--debug',
+                    '--config-only',
+                  ],
+                  pluginExampleDirectory.path),
+              ProcessCall(
                   'xcrun',
                   const <String>[
                     'xcodebuild',
@@ -449,6 +546,15 @@ void main() {
             processRunner.recordedCalls,
             orderedEquals(<ProcessCall>[
               ProcessCall(
+                  'flutter',
+                  const <String>[
+                    'build',
+                    'ios',
+                    '--debug',
+                    '--config-only',
+                  ],
+                  pluginExampleDirectory.path),
+              ProcessCall(
                   'xcrun',
                   const <String>[
                     'xcodebuild',
@@ -484,6 +590,67 @@ void main() {
             ]));
 
         expect(processRunner.recordedCalls, orderedEquals(<ProcessCall>[]));
+      });
+    });
+
+    group('file filtering', () {
+      const List<String> files = <String>[
+        'foo.m',
+        'foo.swift',
+        'foo.cc',
+        'foo.cpp',
+        'foo.h',
+      ];
+      for (final String file in files) {
+        test('runs command for changes to $file', () async {
+          createFakePackage('package_a', packagesDir);
+
+          gitProcessRunner.mockProcessesForExecutable['git-diff'] =
+              <FakeProcessInfo>[
+            FakeProcessInfo(MockProcess(stdout: '''
+packages/package_a/$file
+''')),
+          ];
+
+          final List<String> output = await runCapturingPrint(
+              runner, <String>['xcode-analyze', '--ios']);
+
+          expect(
+              output,
+              containsAllInOrder(<Matcher>[
+                contains('Running for package_a'),
+              ]));
+        });
+      }
+
+      test('skips commands if all files should be ignored', () async {
+        createFakePackage('package_a', packagesDir);
+
+        gitProcessRunner.mockProcessesForExecutable['git-diff'] =
+            <FakeProcessInfo>[
+          FakeProcessInfo(MockProcess(stdout: '''
+.gemini/config.yaml
+AGENTS.md
+README.md
+CODEOWNERS
+packages/package_a/CHANGELOG.md
+packages/package_a/lib/foo.dart
+''')),
+        ];
+
+        final List<String> output =
+            await runCapturingPrint(runner, <String>['xcode-analyze', '--ios']);
+
+        expect(
+            output,
+            isNot(containsAllInOrder(<Matcher>[
+              contains('Running for package_a'),
+            ])));
+        expect(
+            output,
+            containsAllInOrder(<Matcher>[
+              contains('SKIPPING ALL PACKAGES'),
+            ]));
       });
     });
   });

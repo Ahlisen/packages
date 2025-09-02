@@ -32,9 +32,10 @@ class AppStoreProductDetails extends ProductDetails {
       price: product.priceLocale.currencySymbol + product.price,
       rawPrice: double.parse(product.price),
       currencyCode: product.priceLocale.currencyCode,
-      currencySymbol: product.priceLocale.currencySymbol.isNotEmpty
-          ? product.priceLocale.currencySymbol
-          : product.priceLocale.currencyCode,
+      currencySymbol:
+          product.priceLocale.currencySymbol.isNotEmpty
+              ? product.priceLocale.currencySymbol
+              : product.priceLocale.currencyCode,
       skProduct: product,
     );
   }
@@ -66,7 +67,7 @@ class AppStoreProduct2Details extends ProductDetails {
       id: product.id,
       title: product.displayName,
       description: product.description,
-      price: product.priceLocale.currencySymbol + product.price.toString(),
+      price: product.displayPrice,
       rawPrice: product.price,
       currencyCode: product.priceLocale.currencyCode,
       currencySymbol: product.priceLocale.currencySymbol,
