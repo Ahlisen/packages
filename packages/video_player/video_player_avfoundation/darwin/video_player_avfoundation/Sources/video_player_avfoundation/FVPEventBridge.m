@@ -99,6 +99,19 @@
   [self sendOrQueue:@{@"event" : @"bufferingUpdate", @"values" : regions}];
 }
 
+- (void)videoPlayerDidStartReloading {
+  [self sendOrQueue:@{@"event" : @"reloadingStart"}];
+}
+
+- (void)videoPlayerDidEndReloadingWithDuration:(int64_t)duration size:(CGSize)size {
+  [self sendOrQueue:@{
+    @"event" : @"reloadingEnd",
+    @"duration" : @(duration),
+    @"width" : @(size.width),
+    @"height" : @(size.height)
+  }];
+}
+
 - (void)videoPlayerDidSetPlaying:(BOOL)playing {
   [self sendOrQueue:@{@"event" : @"isPlayingStateUpdate", @"isPlaying" : @(playing)}];
 }
