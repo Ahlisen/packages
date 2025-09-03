@@ -38,17 +38,15 @@ NS_ASSUME_NONNULL_BEGIN
 @interface FVPLoadMessage : NSObject
 /// `init` unavailable to enforce nonnull fields, see the `make` class method.
 - (instancetype)init NS_UNAVAILABLE;
-+ (instancetype)makeWithTextureId:(NSInteger )textureId
++ (instancetype)makeWithPlayerId:(NSInteger )playerId
     asset:(nullable NSString *)asset
     uri:(nullable NSString *)uri
     packageName:(nullable NSString *)packageName
-    formatHint:(nullable NSString *)formatHint
     httpHeaders:(NSDictionary<NSString *, NSString *> *)httpHeaders;
-@property(nonatomic, assign) NSInteger  textureId;
+@property(nonatomic, assign) NSInteger  playerId;
 @property(nonatomic, copy, nullable) NSString * asset;
 @property(nonatomic, copy, nullable) NSString * uri;
 @property(nonatomic, copy, nullable) NSString * packageName;
-@property(nonatomic, copy, nullable) NSString * formatHint;
 @property(nonatomic, copy) NSDictionary<NSString *, NSString *> * httpHeaders;
 @end
 

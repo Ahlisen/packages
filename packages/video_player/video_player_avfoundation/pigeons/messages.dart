@@ -33,12 +33,11 @@ class CreationOptions {
 }
 
 class LoadMessage {
-  LoadMessage(this.textureId, {required this.httpHeaders});
-  int textureId;
+  LoadMessage(this.playerId, {required this.httpHeaders});
+  int playerId;
   String? asset;
   String? uri;
   String? packageName;
-  String? formatHint;
   Map<String, String> httpHeaders;
 }
 

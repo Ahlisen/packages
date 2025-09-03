@@ -150,7 +150,7 @@ class CreateMessage {
 
 class LoadMessage {
   LoadMessage({
-    required this.textureId,
+    required this.playerId,
     this.asset,
     this.uri,
     this.packageName,
@@ -158,7 +158,7 @@ class LoadMessage {
     required this.httpHeaders,
   });
 
-  int textureId;
+  int playerId;
 
   String? asset;
 
@@ -166,13 +166,13 @@ class LoadMessage {
 
   String? packageName;
 
-  String? formatHint;
+  PlatformVideoFormat? formatHint;
 
   Map<String, String> httpHeaders;
 
   List<Object?> _toList() {
     return <Object?>[
-      textureId,
+      playerId,
       asset,
       uri,
       packageName,
@@ -187,11 +187,11 @@ class LoadMessage {
   static LoadMessage decode(Object result) {
     result as List<Object?>;
     return LoadMessage(
-      textureId: result[0]! as int,
+      playerId: result[0]! as int,
       asset: result[1] as String?,
       uri: result[2] as String?,
       packageName: result[3] as String?,
-      formatHint: result[4] as String?,
+      formatHint: result[4] as PlatformVideoFormat?,
       httpHeaders: (result[5] as Map<Object?, Object?>?)!.cast<String, String>(),
     );
   }

@@ -37,20 +37,6 @@
 #endif
 }
 
-/// Removes all key-value observers set up for the player.
-///
-/// This is called from dealloc, so must not use any methods on self.
-- (void)removeKeyValueObservers {
-  AVPlayerItem *currentItem = _player.currentItem;
-  [currentItem removeObserver:self forKeyPath:@"status"];
-  [currentItem removeObserver:self forKeyPath:@"loadedTimeRanges"];
-  [currentItem removeObserver:self forKeyPath:@"presentationSize"];
-  [currentItem removeObserver:self forKeyPath:@"duration"];
-  [currentItem removeObserver:self forKeyPath:@"playbackLikelyToKeepUp"];
-  [_playerLayer removeObserver:self forKeyPath:@"readyForDisplay"];
-  [_player removeObserver:self forKeyPath:@"rate"];
-}
-
 @end
 
 #pragma mark -
@@ -254,6 +240,49 @@ static void upgradeAudioSessionCategory(AVAudioSessionCategory requestedCategory
                                 AVAudioSessionCategoryOptionMixWithOthers);
   }
 #endif
+}
+
+- (void)load:(FVPLoadMessage *)input error:(FlutterError **)error {
+  FVPVideoPlayer *player = self.playersByIdentifier[@(input.playerId)];
+  
+  if (!player) {
+    *error = [FlutterError errorWithCode:@"video_player" 
+                                 message:@"Player not found" 
+                                 details:nil];
+    return;
+  }
+
+  if (input.asset) {
+    NSString *assetPath;
+    if (input.packageName) {
+      assetPath = [self.registrar lookupKeyForAsset:input.asset fromPackage:input.packageName];
+    } else {
+      assetPath = [self.registrar lookupKeyForAsset:input.asset];
+    }
+    @try {
+      NSString *path = [[NSBundle mainBundle] pathForResource:assetPath ofType:nil];
+#if TARGET_OS_OSX
+      // See https://github.com/flutter/flutter/issues/135302
+      // TODO(stuartmorgan): Remove this if the asset APIs are adjusted to work better for macOS.
+      if (!path) {
+        path = [NSURL URLWithString:assetPath relativeToURL:NSBundle.mainBundle.bundleURL].path;
+      }
+#endif
+      if (!path) {
+        *error = [FlutterError errorWithCode:@"video_player" 
+                                     message:@"Asset not found" 
+                                     details:nil];
+        return;
+      }
+      [player loadAsset:[NSURL fileURLWithPath:path] httpHeaders:input.httpHeaders];
+    } @catch (NSException *exception) {
+      *error = [FlutterError errorWithCode:@"video_player" message:exception.reason details:nil];
+    }
+  } else if (input.uri) {
+    [player loadAsset:[NSURL URLWithString:input.uri] httpHeaders:input.httpHeaders];
+  } else {
+    *error = [FlutterError errorWithCode:@"video_player" message:@"not implemented" details:nil];
+  }
 }
 
 - (nullable NSString *)fileURLForAssetWithName:(NSString *)asset

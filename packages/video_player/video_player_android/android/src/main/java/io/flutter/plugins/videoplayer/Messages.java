@@ -318,17 +318,17 @@ public class Messages {
 
   /** Generated class from Pigeon that represents data sent in messages. */
   public static final class LoadMessage {
-    private @NonNull Long textureId;
+    private @NonNull Long playerId;
 
-    public @NonNull Long getTextureId() {
-      return textureId;
+    public @NonNull Long getPlayerId() {
+      return playerId;
     }
 
-    public void setTextureId(@NonNull Long setterArg) {
+    public void setPlayerId(@NonNull Long setterArg) {
       if (setterArg == null) {
-        throw new IllegalStateException("Nonnull field \"textureId\" is null.");
+        throw new IllegalStateException("Nonnull field \"playerId\" is null.");
       }
-      this.textureId = setterArg;
+      this.playerId = setterArg;
     }
 
     private @Nullable String asset;
@@ -361,13 +361,13 @@ public class Messages {
       this.packageName = setterArg;
     }
 
-    private @Nullable String formatHint;
+    private @Nullable PlatformVideoFormat formatHint;
 
-    public @Nullable String getFormatHint() {
+    public @Nullable PlatformVideoFormat getFormatHint() {
       return formatHint;
     }
 
-    public void setFormatHint(@Nullable String setterArg) {
+    public void setFormatHint(@Nullable PlatformVideoFormat setterArg) {
       this.formatHint = setterArg;
     }
 
@@ -392,21 +392,21 @@ public class Messages {
       if (this == o) { return true; }
       if (o == null || getClass() != o.getClass()) { return false; }
       LoadMessage that = (LoadMessage) o;
-      return textureId.equals(that.textureId) && Objects.equals(asset, that.asset) && Objects.equals(uri, that.uri) && Objects.equals(packageName, that.packageName) && Objects.equals(formatHint, that.formatHint) && httpHeaders.equals(that.httpHeaders);
+      return playerId.equals(that.playerId) && Objects.equals(asset, that.asset) && Objects.equals(uri, that.uri) && Objects.equals(packageName, that.packageName) && Objects.equals(formatHint, that.formatHint) && httpHeaders.equals(that.httpHeaders);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(textureId, asset, uri, packageName, formatHint, httpHeaders);
+      return Objects.hash(playerId, asset, uri, packageName, formatHint, httpHeaders);
     }
 
     public static final class Builder {
 
-      private @Nullable Long textureId;
+      private @Nullable Long playerId;
 
       @CanIgnoreReturnValue
-      public @NonNull Builder setTextureId(@NonNull Long setterArg) {
-        this.textureId = setterArg;
+      public @NonNull Builder setPlayerId(@NonNull Long setterArg) {
+        this.playerId = setterArg;
         return this;
       }
 
@@ -434,10 +434,10 @@ public class Messages {
         return this;
       }
 
-      private @Nullable String formatHint;
+      private @Nullable PlatformVideoFormat formatHint;
 
       @CanIgnoreReturnValue
-      public @NonNull Builder setFormatHint(@Nullable String setterArg) {
+      public @NonNull Builder setFormatHint(@Nullable PlatformVideoFormat setterArg) {
         this.formatHint = setterArg;
         return this;
       }
@@ -452,7 +452,7 @@ public class Messages {
 
       public @NonNull LoadMessage build() {
         LoadMessage pigeonReturn = new LoadMessage();
-        pigeonReturn.setTextureId(textureId);
+        pigeonReturn.setPlayerId(playerId);
         pigeonReturn.setAsset(asset);
         pigeonReturn.setUri(uri);
         pigeonReturn.setPackageName(packageName);
@@ -465,7 +465,7 @@ public class Messages {
     @NonNull
     ArrayList<Object> toList() {
       ArrayList<Object> toListResult = new ArrayList<>(6);
-      toListResult.add(textureId);
+      toListResult.add(playerId);
       toListResult.add(asset);
       toListResult.add(uri);
       toListResult.add(packageName);
@@ -476,8 +476,8 @@ public class Messages {
 
     static @NonNull LoadMessage fromList(@NonNull ArrayList<Object> pigeonVar_list) {
       LoadMessage pigeonResult = new LoadMessage();
-      Object textureId = pigeonVar_list.get(0);
-      pigeonResult.setTextureId((Long) textureId);
+      Object playerId = pigeonVar_list.get(0);
+      pigeonResult.setPlayerId((Long) playerId);
       Object asset = pigeonVar_list.get(1);
       pigeonResult.setAsset((String) asset);
       Object uri = pigeonVar_list.get(2);
@@ -485,7 +485,7 @@ public class Messages {
       Object packageName = pigeonVar_list.get(3);
       pigeonResult.setPackageName((String) packageName);
       Object formatHint = pigeonVar_list.get(4);
-      pigeonResult.setFormatHint((String) formatHint);
+      pigeonResult.setFormatHint((PlatformVideoFormat) formatHint);
       Object httpHeaders = pigeonVar_list.get(5);
       pigeonResult.setHttpHeaders((Map<String, String>) httpHeaders);
       return pigeonResult;

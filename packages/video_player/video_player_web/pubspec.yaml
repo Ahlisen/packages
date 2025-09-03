@@ -23,10 +23,7 @@ dependencies:
   flutter_web_plugins:
     sdk: flutter
   video_player_platform_interface:
-    git:
-      url: https://github.com/Ahlisen/packages
-      path: packages/video_player/video_player_platform_interface
-      ref: cfbafe4343a0c9af797b144f2812cadf67246384
+    path: ../video_player_platform_interface
   web: ">=0.5.1 <2.0.0"
 
 dev_dependencies:

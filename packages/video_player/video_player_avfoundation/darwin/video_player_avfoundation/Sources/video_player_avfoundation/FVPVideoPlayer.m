@@ -15,6 +15,9 @@ static void *presentationSizeContext = &presentationSizeContext;
 static void *durationContext = &durationContext;
 static void *playbackLikelyToKeepUpContext = &playbackLikelyToKeepUpContext;
 static void *rateContext = &rateContext;
+static void *isReadyToDisplayContext = &isReadyToDisplayContext;
+
+#define ONE_FRAME_DURATION 0.03
 
 /// Registers KVO observers on 'object' for each entry in 'observations', which must be a
 /// dictionary mapping KVO keys to NSValue-wrapped context pointers.
@@ -59,6 +62,14 @@ static NSDictionary<NSString *, NSValue *> *FVPGetPlayerObservations(void) {
 }
 
 /// Returns a mapping of KVO keys to NSValue-wrapped observer context pointers for observations that
+/// should be set for AVPlayerLayer instances.
+static NSDictionary<NSString *, NSValue *> *FVPGetPlayerLayerObservations(void) {
+  return @{
+    @"readyForDisplay" : [NSValue valueWithPointer:isReadyToDisplayContext],
+  };
+}
+
+/// Returns a mapping of KVO keys to NSValue-wrapped observer context pointers for observations that
 /// should be set for AVPlayerItem instances.
 static NSDictionary<NSString *, NSValue *> *FVPGetPlayerItemObservations(void) {
   return @{
@@ -73,6 +84,8 @@ static NSDictionary<NSString *, NSValue *> *FVPGetPlayerItemObservations(void) {
 @implementation FVPVideoPlayer {
   // Whether or not player and player item listeners have ever been registered.
   BOOL _listenersRegistered;
+  // Whether waiting for the first frame to be ready for display
+  BOOL _waitingForFrame;
 }
 
 - (instancetype)initWithPlayerItem:(AVPlayerItem *)item
@@ -296,13 +309,17 @@ NS_INLINE CGFloat radiansToDegrees(CGFloat radians) {
       break;
     case AVPlayerItemStatusReadyToPlay:
       [item addOutput:_videoOutput];
-      [self reportInitializedIfReadyToPlay];
+      if (_loadingNewAsset) {
+        [self finishLoadingNewAssetIfAble];
+      } else {
+        [self reportInitializedIfReadyToPlay];
+      }
       break;
   }
 }
 
 - (void)updatePlayingState {
-  if (!_isInitialized) {
+  if (!_isInitialized || _loadingNewAsset) {
     return;
   }
   if (_isPlaying) {
@@ -473,6 +490,77 @@ NS_INLINE CGFloat radiansToDegrees(CGFloat radians) {
   // `[AVPlayerItem duration]` can be `kCMTimeIndefinite`,
   // use `[[AVPlayerItem asset] duration]` instead.
   return FVPCMTimeToMillis([[[_player currentItem] asset] duration]);
+}
+
+- (void)loadAsset:(NSURL *)url httpHeaders:(nonnull NSDictionary<NSString *, NSString *> *)headers {
+  if (_loadingNewAsset) {
+    return;
+  }
+
+  _loadingNewAsset = YES;
+
+  NSDictionary<NSString *, id> *options = nil;
+  if ([headers count] != 0) {
+    options = @{@"AVURLAssetHTTPHeaderFieldsKey" : headers};
+  }
+  
+  AVPlayerItem *previousItem = _player.currentItem;
+  [previousItem removeOutput:_videoOutput];
+
+  AVURLAsset *urlAsset = [AVURLAsset URLAssetWithURL:url options:options];
+  AVPlayerItem *item = [AVPlayerItem playerItemWithAsset:urlAsset];
+
+  // Remove old observers if they exist
+  if (_listenersRegistered) {
+    FVPRemoveKeyValueObservers(self, FVPGetPlayerItemObservations(), previousItem);
+    [[NSNotificationCenter defaultCenter] removeObserver:self
+                                                     name:AVPlayerItemDidPlayToEndTimeNotification
+                                                   object:previousItem];
+  }
+
+  [item addOutput:_videoOutput];
+  [_player replaceCurrentItemWithPlayerItem:item];
+  
+  // Set up observers for the new item
+  if (_listenersRegistered) {
+    FVPRegisterKeyValueObservers(self, FVPGetPlayerItemObservations(), item);
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(itemDidPlayToEndTime:)
+                                                 name:AVPlayerItemDidPlayToEndTimeNotification
+                                               object:item];
+  }
+
+  if (_eventListener != nil) {
+    [_eventListener videoPlayerDidStartReloading];
+  }
+}
+
+- (void)finishLoadingNewAssetIfAble {
+  if (_eventListener && _isInitialized && _loadingNewAsset) {
+    AVPlayerItem *currentItem = self.player.currentItem;
+    CGSize size = currentItem.presentationSize;
+    CGFloat width = size.width;
+    CGFloat height = size.height;
+
+    // The player has not yet initialized when it has no size, unless it is an audio-only track.
+    // HLS m3u8 video files never load any tracks, and are also not yet initialized until they have
+    // a size.
+    if (height == CGSizeZero.height && width == CGSizeZero.width) {
+      return;
+    }
+    // The player may be initialized but still needs to determine the duration.
+    int64_t duration = [self duration];
+    if (duration == 0) {
+      return;
+    }
+
+    _loadingNewAsset = NO;
+    
+    // Report new video dimensions and duration
+    [self.eventListener videoPlayerDidEndReloadingWithDuration:duration size:size];
+    [self updatePlayingState];
+    [self.eventListener videoPlayerDidEndBuffering];
+  }
 }
 
 @end

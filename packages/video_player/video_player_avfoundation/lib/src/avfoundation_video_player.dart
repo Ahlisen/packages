@@ -138,7 +138,6 @@ class AVFoundationVideoPlayer extends VideoPlayerPlatform {
     String? asset;
     String? packageName;
     String? uri;
-    String? formatHint;
     Map<String, String> httpHeaders = <String, String>{};
     switch (dataSource.sourceType) {
       case DataSourceType.asset:
@@ -146,7 +145,6 @@ class AVFoundationVideoPlayer extends VideoPlayerPlatform {
         packageName = dataSource.package;
       case DataSourceType.network:
         uri = dataSource.uri;
-        formatHint = _videoFormatStringMap[dataSource.formatHint];
         httpHeaders = dataSource.httpHeaders;
       case DataSourceType.file:
         uri = dataSource.uri;
@@ -159,7 +157,6 @@ class AVFoundationVideoPlayer extends VideoPlayerPlatform {
       packageName: packageName,
       uri: uri,
       httpHeaders: httpHeaders,
-      formatHint: formatHint,
     );
 
     await _api.load(message);

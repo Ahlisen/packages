@@ -24,9 +24,16 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nonatomic, readonly) BOOL isPlaying;
 /// Indicates whether the video player has been initialized.
 @property(nonatomic, readonly) BOOL isInitialized;
+/// Indicates whether the video player is currently loading a new asset.
+@property(nonatomic) BOOL loadingNewAsset;
 
 /// Updates the playing state of the video player.
 - (void)updatePlayingState;
+
+/// Loads a new video asset with the specified URL and HTTP headers.
+/// @param url The URL of the video asset to load.
+/// @param httpHeaders HTTP headers to include with the request.
+- (void)loadAsset:(NSURL *)url httpHeaders:(NSDictionary<NSString *, NSString *> *)httpHeaders;
 @end
 
 NS_ASSUME_NONNULL_END

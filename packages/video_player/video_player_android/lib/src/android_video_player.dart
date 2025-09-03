@@ -149,11 +149,11 @@ class AndroidVideoPlayer extends VideoPlayerPlatform {
   }
 
   @override
-  Future<void> load(int textureId, DataSource dataSource) async {
+  Future<void> load(int playerId, DataSource dataSource) async {
     String? asset;
     String? packageName;
     String? uri;
-    String? formatHint;
+    PlatformVideoFormat? formatHint;
     Map<String, String> httpHeaders = <String, String>{};
     switch (dataSource.sourceType) {
       case DataSourceType.asset:
@@ -161,7 +161,7 @@ class AndroidVideoPlayer extends VideoPlayerPlatform {
         packageName = dataSource.package;
       case DataSourceType.network:
         uri = dataSource.uri;
-        formatHint = _videoFormatStringMap[dataSource.formatHint];
+        formatHint = _platformVideoFormatFromVideoFormat(dataSource.formatHint);
         httpHeaders = dataSource.httpHeaders;
       case DataSourceType.file:
         uri = dataSource.uri;
@@ -170,7 +170,7 @@ class AndroidVideoPlayer extends VideoPlayerPlatform {
         uri = dataSource.uri;
     }
     final LoadMessage message = LoadMessage(
-      textureId: textureId,
+      playerId: playerId,
       asset: asset,
       packageName: packageName,
       uri: uri,

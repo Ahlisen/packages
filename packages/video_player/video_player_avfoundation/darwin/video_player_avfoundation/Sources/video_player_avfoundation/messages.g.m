@@ -101,29 +101,26 @@ static id GetNullableObjectAtIndex(NSArray<id> *array, NSInteger key) {
 @end
 
 @implementation FVPLoadMessage
-+ (instancetype)makeWithTextureId:(NSInteger )textureId
++ (instancetype)makeWithPlayerId:(NSInteger )playerId
     asset:(nullable NSString *)asset
     uri:(nullable NSString *)uri
     packageName:(nullable NSString *)packageName
-    formatHint:(nullable NSString *)formatHint
     httpHeaders:(NSDictionary<NSString *, NSString *> *)httpHeaders {
   FVPLoadMessage* pigeonResult = [[FVPLoadMessage alloc] init];
-  pigeonResult.textureId = textureId;
+  pigeonResult.playerId = playerId;
   pigeonResult.asset = asset;
   pigeonResult.uri = uri;
   pigeonResult.packageName = packageName;
-  pigeonResult.formatHint = formatHint;
   pigeonResult.httpHeaders = httpHeaders;
   return pigeonResult;
 }
 + (FVPLoadMessage *)fromList:(NSArray<id> *)list {
   FVPLoadMessage *pigeonResult = [[FVPLoadMessage alloc] init];
-  pigeonResult.textureId = [GetNullableObjectAtIndex(list, 0) integerValue];
+  pigeonResult.playerId = [GetNullableObjectAtIndex(list, 0) integerValue];
   pigeonResult.asset = GetNullableObjectAtIndex(list, 1);
   pigeonResult.uri = GetNullableObjectAtIndex(list, 2);
   pigeonResult.packageName = GetNullableObjectAtIndex(list, 3);
-  pigeonResult.formatHint = GetNullableObjectAtIndex(list, 4);
-  pigeonResult.httpHeaders = GetNullableObjectAtIndex(list, 5);
+  pigeonResult.httpHeaders = GetNullableObjectAtIndex(list, 4);
   return pigeonResult;
 }
 + (nullable FVPLoadMessage *)nullableFromList:(NSArray<id> *)list {
@@ -131,11 +128,10 @@ static id GetNullableObjectAtIndex(NSArray<id> *array, NSInteger key) {
 }
 - (NSArray<id> *)toList {
   return @[
-    @(self.textureId),
+    @(self.playerId),
     self.asset ?: [NSNull null],
     self.uri ?: [NSNull null],
     self.packageName ?: [NSNull null],
-    self.formatHint ?: [NSNull null],
     self.httpHeaders ?: [NSNull null],
   ];
 }
