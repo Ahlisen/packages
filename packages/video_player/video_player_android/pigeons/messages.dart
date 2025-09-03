@@ -43,6 +43,7 @@ class LoadMessage {
   String? packageName;
   PlatformVideoFormat? formatHint;
   Map<String, String> httpHeaders;
+  String? userAgent;
 }
 
 class PlaybackState {

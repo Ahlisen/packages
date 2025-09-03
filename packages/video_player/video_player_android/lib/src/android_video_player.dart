@@ -154,20 +154,30 @@ class AndroidVideoPlayer extends VideoPlayerPlatform {
     String? packageName;
     String? uri;
     PlatformVideoFormat? formatHint;
-    Map<String, String> httpHeaders = <String, String>{};
+    final Map<String, String> httpHeaders = dataSource.httpHeaders;
+    final String? userAgent = _userAgentFromHeaders(httpHeaders);
     switch (dataSource.sourceType) {
       case DataSourceType.asset:
-        asset = dataSource.asset;
-        packageName = dataSource.package;
+        final String? asset = dataSource.asset;
+        if (asset == null) {
+          throw ArgumentError(
+            '"asset" must be non-null for an asset data source',
+          );
+        }
+        final String key = await _api.getLookupKeyForAsset(
+          asset,
+          dataSource.package,
+        );
+        uri = 'asset:///$key';
       case DataSourceType.network:
         uri = dataSource.uri;
         formatHint = _platformVideoFormatFromVideoFormat(dataSource.formatHint);
-        httpHeaders = dataSource.httpHeaders;
       case DataSourceType.file:
-        uri = dataSource.uri;
-        httpHeaders = dataSource.httpHeaders;
       case DataSourceType.contentUri:
         uri = dataSource.uri;
+    }
+    if (uri == null) {
+      throw ArgumentError('Unable to construct a video asset from $dataSource');
     }
     final LoadMessage message = LoadMessage(
       playerId: playerId,
@@ -176,6 +186,7 @@ class AndroidVideoPlayer extends VideoPlayerPlatform {
       uri: uri,
       httpHeaders: httpHeaders,
       formatHint: formatHint,
+      userAgent: userAgent,
     );
 
     await _api.load(message);

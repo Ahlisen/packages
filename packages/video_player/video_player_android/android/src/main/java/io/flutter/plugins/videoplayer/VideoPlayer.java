@@ -75,11 +75,8 @@ public abstract class VideoPlayer implements Messages.VideoPlayerInstanceApi {
         !isMixMode);
   }
 
-  @override
-  void loadAsset(
-      Context context,
-      @NonNull VideoAsset asset) {
-    mediaItem = asset.getMediaItem();
+  public void loadAsset(@NonNull VideoAsset asset) {
+    MediaItem mediaItem = asset.getMediaItem();
     exoPlayer.setMediaItem(mediaItem);
     exoPlayer.prepare();
     exoPlayerEventListener.onReloadingStart();

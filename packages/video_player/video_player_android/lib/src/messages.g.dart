@@ -156,6 +156,7 @@ class LoadMessage {
     this.packageName,
     this.formatHint,
     required this.httpHeaders,
+    this.userAgent,
   });
 
   int playerId;
@@ -170,6 +171,8 @@ class LoadMessage {
 
   Map<String, String> httpHeaders;
 
+  String? userAgent;
+
   List<Object?> _toList() {
     return <Object?>[
       playerId,
@@ -178,6 +181,7 @@ class LoadMessage {
       packageName,
       formatHint,
       httpHeaders,
+      userAgent,
     ];
   }
 
@@ -193,6 +197,7 @@ class LoadMessage {
       packageName: result[3] as String?,
       formatHint: result[4] as PlatformVideoFormat?,
       httpHeaders: (result[5] as Map<Object?, Object?>?)!.cast<String, String>(),
+      userAgent: result[6] as String?,
     );
   }
 

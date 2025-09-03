@@ -14,7 +14,7 @@ public abstract class ExoPlayerEventListener implements Player.Listener {
   private boolean isBuffering = false;
   private boolean isInitialized = false;
   private boolean isLoadingNewAsset = false;
-  private CountDownTimer countdown;
+  private CountDownTimer timeoutCountdown;
   protected final ExoPlayer exoPlayer;
   protected final VideoPlayerCallbacks events;
 
@@ -48,11 +48,6 @@ public abstract class ExoPlayerEventListener implements Player.Listener {
       @NonNull ExoPlayer exoPlayer, @NonNull VideoPlayerCallbacks events) {
     this.exoPlayer = exoPlayer;
     this.events = events;
-
-    this.countdown = new CountDownTimer(1000, 1000) {
-      public void onTick(long millisUntilFinished) {}
-      public void onFinish() {}
-  };
   }
 
   private void setBuffering(boolean buffering) {
@@ -67,7 +62,21 @@ public abstract class ExoPlayerEventListener implements Player.Listener {
     }
   }
 
-  protected abstract void sendInitialized(String eventName);
+  private void startTimeoutCountdown() {
+    if (timeoutCountdown != null) {
+      timeoutCountdown.cancel();
+    }
+    timeoutCountdown = new CountDownTimer(8000, 8000) {
+
+        public void onTick(long millisUntilFinished) {}
+
+        public void onFinish() {
+          events.onError("VideoError", "Video player timed out, no events", null);
+        }
+    }.start();
+  }
+
+  protected abstract void sendInitialized(@NonNull String eventName);
 
   @Override
   public void onPlaybackStateChanged(final int playbackState) {
@@ -77,12 +86,14 @@ public abstract class ExoPlayerEventListener implements Player.Listener {
         events.onBufferingUpdate(exoPlayer.getBufferedPosition());
         break;
       case Player.STATE_READY:
+        if (timeoutCountdown != null) {
+          timeoutCountdown.cancel();
+        }
         if (!isInitialized) {
           isInitialized = true;
           sendInitialized("initialized");
         } else if (isLoadingNewAsset) {
           isLoadingNewAsset = false;
-          countdown.cancel();
           sendInitialized("reloadingEnd");
         }
         break;
@@ -116,15 +127,7 @@ public abstract class ExoPlayerEventListener implements Player.Listener {
   }
 
   public void onReloadingStart() {
-    countdown.cancel();
-    countdown = new CountDownTimer(8000, 8000) {
-
-        public void onTick(long millisUntilFinished) {}
-
-        public void onFinish() {
-          events.onError("VideoError", "Video player timed out, no events", null);
-        }
-    }.start();
+    startTimeoutCountdown();
     isLoadingNewAsset = true;
     events.onReloadingStart();
   }

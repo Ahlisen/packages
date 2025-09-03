@@ -48,7 +48,7 @@ public final class ExoPlayerEventListenerTest {
     }
 
     @Override
-    protected void sendInitialized() {
+    protected void sendInitialized(String eventName) {
       // No implementation needed.
     }
   }

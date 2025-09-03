@@ -182,8 +182,8 @@ public class VideoPlayerPlugin implements FlutterPlugin, AndroidVideoPlayerApi {
       String assetLookupKey;
       if (arg.getPackageName() != null) {
         assetLookupKey = flutterState.keyForAssetAndPackageName.get(
-                arg.getAsset(),
-                arg.getPackageName()
+          arg.getAsset(),
+          arg.getPackageName()
         );
       } else {
         assetLookupKey = flutterState.keyForAsset.get(arg.getAsset());
@@ -193,7 +193,7 @@ public class VideoPlayerPlugin implements FlutterPlugin, AndroidVideoPlayerApi {
       videoAsset = VideoAsset.fromRtspUrl(arg.getUri());
     } else {
       VideoAsset.StreamingFormat streamingFormat = VideoAsset.StreamingFormat.UNKNOWN;
-      String formatHint = arg.getFormatHint();
+      PlatformVideoFormat formatHint = arg.getFormatHint();
       if (formatHint != null) {
         switch (formatHint) {
           case SS:
@@ -207,10 +207,15 @@ public class VideoPlayerPlugin implements FlutterPlugin, AndroidVideoPlayerApi {
             break;
         }
       }
-      videoAsset = VideoAsset.fromRemoteUrl(arg.getUri(), streamingFormat, arg.getHttpHeaders());
+      videoAsset = VideoAsset.fromRemoteUrl(
+        arg.getUri(),
+        streamingFormat,
+        arg.getHttpHeaders(),
+        arg.getUserAgent()
+      );
     }
 
-    player.loadAsset(flutterState.applicationContext, videoAsset);
+    player.loadAsset(videoAsset);
   }
 
   @Override

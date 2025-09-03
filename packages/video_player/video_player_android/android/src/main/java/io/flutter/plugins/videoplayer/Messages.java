@@ -384,6 +384,16 @@ public class Messages {
       this.httpHeaders = setterArg;
     }
 
+    private @Nullable String userAgent;
+
+    public @Nullable String getUserAgent() {
+      return userAgent;
+    }
+
+    public void setUserAgent(@Nullable String setterArg) {
+      this.userAgent = setterArg;
+    }
+
     /** Constructor is non-public to enforce null safety; use Builder. */
     LoadMessage() {}
 
@@ -392,12 +402,12 @@ public class Messages {
       if (this == o) { return true; }
       if (o == null || getClass() != o.getClass()) { return false; }
       LoadMessage that = (LoadMessage) o;
-      return playerId.equals(that.playerId) && Objects.equals(asset, that.asset) && Objects.equals(uri, that.uri) && Objects.equals(packageName, that.packageName) && Objects.equals(formatHint, that.formatHint) && httpHeaders.equals(that.httpHeaders);
+      return playerId.equals(that.playerId) && Objects.equals(asset, that.asset) && Objects.equals(uri, that.uri) && Objects.equals(packageName, that.packageName) && Objects.equals(formatHint, that.formatHint) && httpHeaders.equals(that.httpHeaders) && Objects.equals(userAgent, that.userAgent);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(playerId, asset, uri, packageName, formatHint, httpHeaders);
+      return Objects.hash(playerId, asset, uri, packageName, formatHint, httpHeaders, userAgent);
     }
 
     public static final class Builder {
@@ -450,6 +460,14 @@ public class Messages {
         return this;
       }
 
+      private @Nullable String userAgent;
+
+      @CanIgnoreReturnValue
+      public @NonNull Builder setUserAgent(@Nullable String setterArg) {
+        this.userAgent = setterArg;
+        return this;
+      }
+
       public @NonNull LoadMessage build() {
         LoadMessage pigeonReturn = new LoadMessage();
         pigeonReturn.setPlayerId(playerId);
@@ -458,19 +476,21 @@ public class Messages {
         pigeonReturn.setPackageName(packageName);
         pigeonReturn.setFormatHint(formatHint);
         pigeonReturn.setHttpHeaders(httpHeaders);
+        pigeonReturn.setUserAgent(userAgent);
         return pigeonReturn;
       }
     }
 
     @NonNull
     ArrayList<Object> toList() {
-      ArrayList<Object> toListResult = new ArrayList<>(6);
+      ArrayList<Object> toListResult = new ArrayList<>(7);
       toListResult.add(playerId);
       toListResult.add(asset);
       toListResult.add(uri);
       toListResult.add(packageName);
       toListResult.add(formatHint);
       toListResult.add(httpHeaders);
+      toListResult.add(userAgent);
       return toListResult;
     }
 
@@ -488,6 +508,8 @@ public class Messages {
       pigeonResult.setFormatHint((PlatformVideoFormat) formatHint);
       Object httpHeaders = pigeonVar_list.get(5);
       pigeonResult.setHttpHeaders((Map<String, String>) httpHeaders);
+      Object userAgent = pigeonVar_list.get(6);
+      pigeonResult.setUserAgent((String) userAgent);
       return pigeonResult;
     }
   }

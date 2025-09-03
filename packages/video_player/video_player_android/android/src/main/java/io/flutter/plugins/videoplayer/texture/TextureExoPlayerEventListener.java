@@ -25,7 +25,7 @@ public final class TextureExoPlayerEventListener extends ExoPlayerEventListener 
   }
 
   @Override
-  protected void sendInitialized() {
+  protected void sendInitialized(@NonNull String eventName) {
     VideoSize videoSize = exoPlayer.getVideoSize();
     RotationDegrees rotationCorrection = RotationDegrees.ROTATE_0;
     int width = videoSize.width;
@@ -50,7 +50,13 @@ public final class TextureExoPlayerEventListener extends ExoPlayerEventListener 
         }
       }
     }
-    events.onInitialized(width, height, exoPlayer.getDuration(), rotationCorrection.getDegrees());
+    events.onInitialized(
+      width,
+      height,
+      exoPlayer.getDuration(),
+      rotationCorrection.getDegrees(),
+      eventName
+    );
   }
 
   private RotationDegrees getRotationCorrectionFromUnappliedRotation(
