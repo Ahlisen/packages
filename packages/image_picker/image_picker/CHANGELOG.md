@@ -1,3 +1,12 @@
+## NEXT
+
+* Updates minimum supported SDK version to Flutter 3.29/Dart 3.7.
+
+## 1.2.0
+
+* Adds `pickMultiVideo` to allow selecting multiple videos from the gallery.
+* Updates minimum supported SDK version to Flutter 3.27/Dart 3.6.
+
 ## 1.1.2
 
 * Adds comment for the limit parameter.

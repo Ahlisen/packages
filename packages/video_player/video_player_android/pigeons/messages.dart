@@ -4,80 +4,91 @@
 
 import 'package:pigeon/pigeon.dart';
 
-@ConfigurePigeon(PigeonOptions(
-  dartOut: 'lib/src/messages.g.dart',
-  dartTestOut: 'test/test_api.g.dart',
-  javaOut: 'android/src/main/java/io/flutter/plugins/videoplayer/Messages.java',
-  javaOptions: JavaOptions(
-    package: 'io.flutter.plugins.videoplayer',
+@ConfigurePigeon(
+  PigeonOptions(
+    dartOut: 'lib/src/messages.g.dart',
+    javaOut:
+        'android/src/main/java/io/flutter/plugins/videoplayer/Messages.java',
+    javaOptions: JavaOptions(package: 'io.flutter.plugins.videoplayer'),
+    copyrightHeader: 'pigeons/copyright.txt',
   ),
-  copyrightHeader: 'pigeons/copyright.txt',
-))
-class TextureMessage {
-  TextureMessage(this.textureId);
-  int textureId;
-}
+)
+/// Pigeon equivalent of VideoViewType.
+enum PlatformVideoViewType { textureView, platformView }
 
-class LoopingMessage {
-  LoopingMessage(this.textureId, this.isLooping);
-  int textureId;
-  bool isLooping;
-}
+/// Pigeon equivalent of video_platform_interface's VideoFormat.
+enum PlatformVideoFormat { dash, hls, ss }
 
-class VolumeMessage {
-  VolumeMessage(this.textureId, this.volume);
-  int textureId;
-  double volume;
-}
+/// Information passed to the platform view creation.
+class PlatformVideoViewCreationParams {
+  const PlatformVideoViewCreationParams({required this.playerId});
 
-class PlaybackSpeedMessage {
-  PlaybackSpeedMessage(this.textureId, this.speed);
-  int textureId;
-  double speed;
-}
-
-class PositionMessage {
-  PositionMessage(this.textureId, this.position);
-  int textureId;
-  int position;
+  final int playerId;
 }
 
 class CreateMessage {
-  CreateMessage({required this.httpHeaders});
-  String? asset;
-  String? uri;
-  String? packageName;
-  String? formatHint;
+  CreateMessage({required this.uri, required this.httpHeaders});
+  String uri;
+  PlatformVideoFormat? formatHint;
   Map<String, String> httpHeaders;
+  String? userAgent;
+  PlatformVideoViewType? viewType;
 }
 
 class LoadMessage {
-  LoadMessage(this.textureId, {required this.httpHeaders});
-  int textureId;
+  LoadMessage(this.playerId, {required this.httpHeaders});
+  int playerId;
   String? asset;
   String? uri;
   String? packageName;
-  String? formatHint;
+  PlatformVideoFormat? formatHint;
   Map<String, String> httpHeaders;
+  String? userAgent;
 }
 
-class MixWithOthersMessage {
-  MixWithOthersMessage(this.mixWithOthers);
-  bool mixWithOthers;
+class PlaybackState {
+  PlaybackState({required this.playPosition, required this.bufferPosition});
+
+  /// The current playback position, in milliseconds.
+  final int playPosition;
+
+  /// The current buffer position, in milliseconds.
+  final int bufferPosition;
 }
 
-@HostApi(dartHostTestHandler: 'TestHostVideoPlayerApi')
+@HostApi()
 abstract class AndroidVideoPlayerApi {
   void initialize();
-  TextureMessage create(CreateMessage msg);
+  int create(CreateMessage msg);
   void load(LoadMessage msg);
-  void dispose(TextureMessage msg);
-  void setLooping(LoopingMessage msg);
-  void setVolume(VolumeMessage msg);
-  void setPlaybackSpeed(PlaybackSpeedMessage msg);
-  void play(TextureMessage msg);
-  PositionMessage position(TextureMessage msg);
-  void seekTo(PositionMessage msg);
-  void pause(TextureMessage msg);
-  void setMixWithOthers(MixWithOthersMessage msg);
+  void dispose(int playerId);
+  void setMixWithOthers(bool mixWithOthers);
+  String getLookupKeyForAsset(String asset, String? packageName);
+}
+
+@HostApi()
+abstract class VideoPlayerInstanceApi {
+  /// Sets whether to automatically loop playback of the video.
+  void setLooping(bool looping);
+
+  /// Sets the volume, with 0.0 being muted and 1.0 being full volume.
+  void setVolume(double volume);
+
+  /// Sets the playback speed as a multiple of normal speed.
+  void setPlaybackSpeed(double speed);
+
+  /// Begins playback if the video is not currently playing.
+  void play();
+
+  /// Pauses playback if the video is currently playing.
+  void pause();
+
+  /// Seeks to the given playback position, in milliseconds.
+  void seekTo(int position);
+
+  /// Returns the current playback state.
+  ///
+  /// This is combined into a single call to minimize platform channel calls for
+  /// state that needs to be polled frequently.
+  PlaybackState getPlaybackState();
 }

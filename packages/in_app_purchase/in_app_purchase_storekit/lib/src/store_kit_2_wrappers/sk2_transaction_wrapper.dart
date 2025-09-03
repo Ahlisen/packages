@@ -17,16 +17,19 @@ InAppPurchase2API _hostApi = InAppPurchase2API();
 /// SKPayment and SKTransaction in StoreKit1
 class SK2Transaction {
   /// Creates a new instance of [SK2Transaction]
-  SK2Transaction(
-      {required this.id,
-      required this.originalId,
-      required this.productId,
-      required this.purchaseDate,
-      this.quantity = 1,
-      required this.appAccountToken,
-      this.subscriptionGroupID,
-      this.price,
-      this.error});
+  SK2Transaction({
+    required this.id,
+    required this.originalId,
+    required this.productId,
+    required this.purchaseDate,
+    this.expirationDate,
+    this.quantity = 1,
+    required this.appAccountToken,
+    this.subscriptionGroupID,
+    this.price,
+    this.error,
+    this.jsonRepresentation,
+  });
 
   /// The unique identifier for the transaction.
   final String id;
@@ -43,6 +46,9 @@ class SK2Transaction {
   /// restored product, or for a subscription purchase or renewal after a lapse.
   final String purchaseDate;
 
+  /// The date the subscription expires or renews.
+  final String? expirationDate;
+
   /// The number of consumable products purchased.
   final int quantity;
 
@@ -57,6 +63,9 @@ class SK2Transaction {
 
   /// Any error returned from StoreKit
   final SKError? error;
+
+  /// The json representation of a transaction
+  final String? jsonRepresentation;
 
   /// Wrapper around [Transaction.finish]
   /// https://developer.apple.com/documentation/storekit/transaction/3749694-finish
@@ -86,16 +95,24 @@ class SK2Transaction {
   static void stopListeningToTransactions() {
     _hostApi.stopListeningToTransactions();
   }
+
+  /// Restore previously completed purchases.
+  static Future<void> restorePurchases() async {
+    await _hostApi.restorePurchases();
+  }
 }
 
 extension on SK2TransactionMessage {
   SK2Transaction convertFromPigeon() {
     return SK2Transaction(
-        id: id.toString(),
-        originalId: originalId.toString(),
-        productId: productId,
-        purchaseDate: purchaseDate,
-        appAccountToken: appAccountToken);
+      id: id.toString(),
+      originalId: originalId.toString(),
+      productId: productId,
+      purchaseDate: purchaseDate,
+      expirationDate: expirationDate,
+      appAccountToken: appAccountToken,
+      jsonRepresentation: jsonRepresentation,
+    );
   }
 
   PurchaseDetails convertToDetails() {
@@ -106,7 +123,11 @@ extension on SK2TransactionMessage {
       // receipt isn’t necessary with SK2 as a Transaction can only be returned
       // from validated purchases.
       verificationData: PurchaseVerificationData(
-          localVerificationData: '', serverVerificationData: '', source: ''),
+        localVerificationData: jsonRepresentation ?? '',
+        // receiptData is the JWS representation of the transaction
+        serverVerificationData: receiptData ?? '',
+        source: kIAPSource,
+      ),
       transactionDate: purchaseDate,
       // Note that with SK2, any transactions that *can* be returned will
       // require to be finished, and are already purchased.
@@ -127,8 +148,11 @@ class SK2TransactionObserverWrapper implements InAppPurchase2CallbackAPI {
   final StreamController<List<PurchaseDetails>> transactionsCreatedController;
 
   @override
-  void onTransactionsUpdated(SK2TransactionMessage newTransaction) {
-    transactionsCreatedController
-        .add(<PurchaseDetails>[newTransaction.convertToDetails()]);
+  void onTransactionsUpdated(List<SK2TransactionMessage> newTransactions) {
+    transactionsCreatedController.add(
+      newTransactions
+          .map((SK2TransactionMessage e) => e.convertToDetails())
+          .toList(),
+    );
   }
 }
