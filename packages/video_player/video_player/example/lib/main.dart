@@ -6,8 +6,8 @@
 
 /// An example of using the plugin, controlling lifecycle and playback of the
 /// video.
-/// 
-/// 
+///
+///
 library;
 
 import 'package:flutter/material.dart';
@@ -122,102 +122,96 @@ class _ViewTypeTabBarState extends State<_ViewTypeTabBar>
   }
 }
 
-class _ButterFlyAssetVideoInList extends StatelessWidget {
+class _ButterFlyAssetVideoInList extends StatefulWidget {
   const _ButterFlyAssetVideoInList(this.viewType);
 
   final VideoViewType viewType;
 
   @override
+  _ButterFlyAssetVideoInListState createState() =>
+      _ButterFlyAssetVideoInListState();
+}
+
+class _ButterFlyAssetVideoInListState
+    extends State<_ButterFlyAssetVideoInList> {
+  late PageController _pageController;
+  int _currentPage = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _pageController = PageController();
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return ListView(
+    return PageView(
+      controller: _pageController,
+      onPageChanged: (int page) {
+        setState(() {
+          _currentPage = page;
+        });
+      },
       children: <Widget>[
-        const _ExampleCard(title: 'Item a'),
-        const _ExampleCard(title: 'Item b'),
-        const _ExampleCard(title: 'Item c'),
-        const _ExampleCard(title: 'Item d'),
-        const _ExampleCard(title: 'Item e'),
-        const _ExampleCard(title: 'Item f'),
-        const _ExampleCard(title: 'Item g'),
         Card(
           child: Column(
             children: <Widget>[
-              Column(
-                children: <Widget>[
-                  const ListTile(
-                    leading: Icon(Icons.cake),
-                    title: Text('Video video'),
-                  ),
-                  Stack(
-                    alignment:
-                        FractionalOffset.bottomRight +
-                        const FractionalOffset(-0.1, -0.1),
-                    children: <Widget>[
-                      _ButterFlyAssetVideo(viewType),
-                      Image.asset('assets/flutter-mark-square-64.png'),
-                    ],
-                  ),
-                ],
+              const ListTile(leading: Icon(Icons.cake), title: Text('Video 1')),
+              _ButterFlyAssetVideo(
+                widget.viewType,
+                shouldPlay: _currentPage == 0,
+                videoAsset: 'assets/Butterfly-209.mp4',
               ),
             ],
           ),
         ),
-        const _ExampleCard(title: 'Item h'),
-        const _ExampleCard(title: 'Item i'),
-        const _ExampleCard(title: 'Item j'),
-        const _ExampleCard(title: 'Item k'),
-        const _ExampleCard(title: 'Item l'),
+        Card(
+          child: Column(
+            children: <Widget>[
+              const ListTile(leading: Icon(Icons.cake), title: Text('Video 2')),
+              _ButterFlyAssetVideo(
+                widget.viewType,
+                shouldPlay: _currentPage == 1,
+                videoAsset:
+                    'https://flutter.github.io/assets-for-api-docs/assets/videos/bee.mp4',
+              ),
+            ],
+          ),
+        ),
+        Card(
+          child: Column(
+            children: <Widget>[
+              const ListTile(leading: Icon(Icons.cake), title: Text('Video 3')),
+              _ButterFlyAssetVideo(
+                widget.viewType,
+                shouldPlay: _currentPage == 2,
+                videoAsset:
+                    'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+              ),
+            ],
+          ),
+        ),
       ],
     );
   }
 }
 
-/// A filler card to show the video in a list of scrolling contents.
-class _ExampleCard extends StatelessWidget {
-  const _ExampleCard({required this.title});
-
-  final String title;
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: <Widget>[
-          ListTile(
-            leading: const Icon(Icons.airline_seat_flat_angled),
-            title: Text(title),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: OverflowBar(
-              alignment: MainAxisAlignment.end,
-              spacing: 8.0,
-              children: <Widget>[
-                TextButton(
-                  child: const Text('BUY TICKETS'),
-                  onPressed: () {
-                    /* ... */
-                  },
-                ),
-                TextButton(
-                  child: const Text('SELL TICKETS'),
-                  onPressed: () {
-                    /* ... */
-                  },
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class _ButterFlyAssetVideo extends StatefulWidget {
-  const _ButterFlyAssetVideo(this.viewType);
+  const _ButterFlyAssetVideo(
+    this.viewType, {
+    this.shouldPlay = true,
+    this.videoAsset = 'assets/Butterfly-209.mp4',
+  });
 
   final VideoViewType viewType;
+  final bool shouldPlay;
+  final String videoAsset;
 
   @override
   _ButterFlyAssetVideoState createState() => _ButterFlyAssetVideoState();
@@ -229,17 +223,40 @@ class _ButterFlyAssetVideoState extends State<_ButterFlyAssetVideo> {
   @override
   void initState() {
     super.initState();
-    _controller = VideoPlayerController.asset(
-      'assets/Butterfly-209.mp4',
-      viewType: widget.viewType,
-    );
+    if (widget.videoAsset.startsWith('http')) {
+      _controller = VideoPlayerController.networkUrl(
+        Uri.parse(widget.videoAsset),
+        viewType: widget.viewType,
+      );
+    } else {
+      _controller = VideoPlayerController.asset(
+        widget.videoAsset,
+        viewType: widget.viewType,
+      );
+    }
 
     _controller.addListener(() {
       setState(() {});
     });
     _controller.setLooping(true);
-    _controller.initialize().then((_) => setState(() {}));
-    _controller.play();
+    _controller.initialize().then((_) {
+      setState(() {});
+      if (widget.shouldPlay) {
+        _controller.play();
+      }
+    });
+  }
+
+  @override
+  void didUpdateWidget(_ButterFlyAssetVideo oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.shouldPlay != widget.shouldPlay) {
+      if (widget.shouldPlay) {
+        _controller.play();
+      } else {
+        _controller.pause();
+      }
+    }
   }
 
   @override
@@ -314,7 +331,7 @@ class _BumbleBeeRemoteVideoState extends State<_BumbleBeeRemoteVideo> {
       setState(() {});
     });
     _controller.setLooping(true);
-    _controller.initialize();//.then((_) => setState(() {}));
+    _controller.initialize(); //.then((_) => setState(() {}));
   }
 
   @override
@@ -345,45 +362,74 @@ class _BumbleBeeRemoteVideoState extends State<_BumbleBeeRemoteVideo> {
               ),
             ),
           ),
-          TextButton(onPressed: () {
-            _controller.loadAsset(Uri.parse('https://flutter.github.io/assets-for-api-docs/assets/videos/butterfly.mp4'));
-          }, child: const Text('Load butterfly')),
-          TextButton(onPressed: () {
-            _controller.loadAsset(Uri.parse('https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4'));
-          }, child: const Text('Load game of thrones')),
-          TextButton(onPressed: () {
-            _controller.loadAsset(Uri.parse('https://flutter.github.io/assets-for-api-docs/assets/videos/bee.mp4'));
-          }, child: const Text('Load bee')),
-          TextButton(onPressed: () {
-            _controller.dispose();
-            _controller = VideoPlayerController.networkUrl(
-            Uri.parse(
-                'https://flutter.github.io/assets-for-api-docs/assets/videos/butterfly.mp4'),
-            closedCaptionFile: _loadCaptions(),
-            videoPlayerOptions: VideoPlayerOptions(mixWithOthers: true),
-          );
+          TextButton(
+            onPressed: () {
+              _controller.loadAsset(
+                Uri.parse(
+                  'https://flutter.github.io/assets-for-api-docs/assets/videos/butterfly.mp4',
+                ),
+              );
+            },
+            child: const Text('Load butterfly'),
+          ),
+          TextButton(
+            onPressed: () {
+              _controller.loadAsset(
+                Uri.parse(
+                  'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+                ),
+              );
+            },
+            child: const Text('Load game of thrones'),
+          ),
+          TextButton(
+            onPressed: () {
+              _controller.loadAsset(
+                Uri.parse(
+                  'https://flutter.github.io/assets-for-api-docs/assets/videos/bee.mp4',
+                ),
+              );
+            },
+            child: const Text('Load bee'),
+          ),
+          TextButton(
+            onPressed: () {
+              _controller.dispose();
+              _controller = VideoPlayerController.networkUrl(
+                Uri.parse(
+                  'https://flutter.github.io/assets-for-api-docs/assets/videos/butterfly.mp4',
+                ),
+                closedCaptionFile: _loadCaptions(),
+                videoPlayerOptions: VideoPlayerOptions(mixWithOthers: true),
+              );
               _controller.addListener(() {
                 setState(() {});
               });
               _controller.setLooping(true);
               _controller.initialize();
               _controller.play();
-          }, child: const Text('Create new player for butterfly')),
-          TextButton(onPressed: () {
-            _controller.dispose();
-            _controller = VideoPlayerController.networkUrl(
+            },
+            child: const Text('Create new player for butterfly'),
+          ),
+          TextButton(
+            onPressed: () {
+              _controller.dispose();
+              _controller = VideoPlayerController.networkUrl(
                 Uri.parse(
-                    'https://flutter.github.io/assets-for-api-docs/assets/videos/bee.mp4'),
+                  'https://flutter.github.io/assets-for-api-docs/assets/videos/bee.mp4',
+                ),
                 closedCaptionFile: _loadCaptions(),
                 videoPlayerOptions: VideoPlayerOptions(mixWithOthers: true),
               );
-          _controller.addListener(() {
-            setState(() {});
-          });
-          _controller.setLooping(true);
-          _controller.initialize();
-          _controller.play();
-          }, child: const Text('Create new player for bee')),
+              _controller.addListener(() {
+                setState(() {});
+              });
+              _controller.setLooping(true);
+              _controller.initialize();
+              _controller.play();
+            },
+            child: const Text('Create new player for bee'),
+          ),
         ],
       ),
     );
