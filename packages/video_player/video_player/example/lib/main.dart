@@ -43,9 +43,9 @@ class _App extends StatelessWidget {
           bottom: const TabBar(
             isScrollable: true,
             tabs: <Widget>[
+              Tab(icon: Icon(Icons.list), text: 'List example'),
               Tab(icon: Icon(Icons.cloud), text: 'Remote'),
               Tab(icon: Icon(Icons.insert_drive_file), text: 'Asset'),
-              Tab(icon: Icon(Icons.list), text: 'List example'),
             ],
           ),
         ),
@@ -53,16 +53,15 @@ class _App extends StatelessWidget {
           children: <Widget>[
             _ViewTypeTabBar(
               builder:
+                  (VideoViewType viewType) =>
+                      _ButterFlyAssetVideoInList(viewType),
+            ),
+            _ViewTypeTabBar(
+              builder:
                   (VideoViewType viewType) => _BumbleBeeRemoteVideo(viewType),
             ),
             _ViewTypeTabBar(
-              builder:
-                  (VideoViewType viewType) => _ButterFlyAssetVideo(viewType),
-            ),
-            _ViewTypeTabBar(
-              builder:
-                  (VideoViewType viewType) =>
-                      _ButterFlyAssetVideoInList(viewType),
+              builder: (VideoViewType viewType) => _Video(viewType),
             ),
           ],
         ),
@@ -136,16 +135,52 @@ class _ButterFlyAssetVideoInListState
     extends State<_ButterFlyAssetVideoInList> {
   late PageController _pageController;
   int _currentPage = 0;
+  late List<VideoPlayerController> _videoControllers;
+  final List<String> _videoAssets = [
+    'assets/Butterfly-209.mp4',
+    'https://flutter.github.io/assets-for-api-docs/assets/videos/bee.mp4',
+    'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+  ];
 
   @override
   void initState() {
     super.initState();
     _pageController = PageController();
+    _videoControllers = [];
+
+    for (int i = 0; i < _videoAssets.length; i++) {
+      final String asset = _videoAssets[i];
+      final VideoPlayerController controller;
+
+      if (asset.startsWith('http')) {
+        controller = VideoPlayerController.networkUrl(
+          Uri.parse(asset),
+          viewType: widget.viewType,
+        );
+      } else {
+        controller = VideoPlayerController.asset(
+          asset,
+          viewType: widget.viewType,
+        );
+      }
+
+      controller.setLooping(true);
+      controller.initialize().then((_) {
+        if (i == _currentPage) {
+          controller.play();
+        }
+      });
+
+      _videoControllers.add(controller);
+    }
   }
 
   @override
   void dispose() {
     _pageController.dispose();
+    for (final VideoPlayerController controller in _videoControllers) {
+      controller.dispose();
+    }
     super.dispose();
   }
 
@@ -154,19 +189,31 @@ class _ButterFlyAssetVideoInListState
     return PageView(
       controller: _pageController,
       onPageChanged: (int page) {
+        // Pause previous video
+        if (_videoControllers.isNotEmpty &&
+            _currentPage < _videoControllers.length) {
+          _videoControllers[_currentPage].pause();
+        }
+
         setState(() {
           _currentPage = page;
         });
+
+        // Play current video
+        if (_videoControllers.isNotEmpty && page < _videoControllers.length) {
+          _videoControllers[page].play();
+        }
       },
       children: <Widget>[
         Card(
           child: Column(
             children: <Widget>[
               const ListTile(leading: Icon(Icons.cake), title: Text('Video 1')),
-              _ButterFlyAssetVideo(
+              _Video(
+                controller:
+                    _videoControllers.isNotEmpty ? _videoControllers[0] : null,
                 widget.viewType,
                 shouldPlay: _currentPage == 0,
-                videoAsset: 'assets/Butterfly-209.mp4',
               ),
             ],
           ),
@@ -175,11 +222,11 @@ class _ButterFlyAssetVideoInListState
           child: Column(
             children: <Widget>[
               const ListTile(leading: Icon(Icons.cake), title: Text('Video 2')),
-              _ButterFlyAssetVideo(
+              _Video(
+                controller:
+                    _videoControllers.isNotEmpty ? _videoControllers[1] : null,
                 widget.viewType,
                 shouldPlay: _currentPage == 1,
-                videoAsset:
-                    'https://flutter.github.io/assets-for-api-docs/assets/videos/bee.mp4',
               ),
             ],
           ),
@@ -188,11 +235,11 @@ class _ButterFlyAssetVideoInListState
           child: Column(
             children: <Widget>[
               const ListTile(leading: Icon(Icons.cake), title: Text('Video 3')),
-              _ButterFlyAssetVideo(
+              _Video(
+                controller:
+                    _videoControllers.isNotEmpty ? _videoControllers[2] : null,
                 widget.viewType,
                 shouldPlay: _currentPage == 2,
-                videoAsset:
-                    'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
               ),
             ],
           ),
@@ -202,71 +249,54 @@ class _ButterFlyAssetVideoInListState
   }
 }
 
-class _ButterFlyAssetVideo extends StatefulWidget {
-  const _ButterFlyAssetVideo(
-    this.viewType, {
-    this.shouldPlay = true,
-    this.videoAsset = 'assets/Butterfly-209.mp4',
-  });
+class _Video extends StatefulWidget {
+  const _Video(this.viewType, {this.controller, this.shouldPlay = true});
 
   final VideoViewType viewType;
+  final VideoPlayerController? controller;
   final bool shouldPlay;
-  final String videoAsset;
 
   @override
-  _ButterFlyAssetVideoState createState() => _ButterFlyAssetVideoState();
+  _VideoState createState() => _VideoState();
 }
 
-class _ButterFlyAssetVideoState extends State<_ButterFlyAssetVideo> {
-  late VideoPlayerController _controller;
+class _VideoState extends State<_Video> {
+  VideoPlayerController? get _controller => widget.controller;
 
   @override
   void initState() {
     super.initState();
-    if (widget.videoAsset.startsWith('http')) {
-      _controller = VideoPlayerController.networkUrl(
-        Uri.parse(widget.videoAsset),
-        viewType: widget.viewType,
-      );
-    } else {
-      _controller = VideoPlayerController.asset(
-        widget.videoAsset,
-        viewType: widget.viewType,
-      );
-    }
-
-    _controller.addListener(() {
-      setState(() {});
-    });
-    _controller.setLooping(true);
-    _controller.initialize().then((_) {
-      setState(() {});
-      if (widget.shouldPlay) {
-        _controller.play();
+    _controller?.addListener(() {
+      if (mounted) {
+        setState(() {});
       }
     });
   }
 
   @override
-  void didUpdateWidget(_ButterFlyAssetVideo oldWidget) {
+  void didUpdateWidget(_Video oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.shouldPlay != widget.shouldPlay) {
+    if (oldWidget.shouldPlay != widget.shouldPlay && _controller != null) {
       if (widget.shouldPlay) {
-        _controller.play();
+        _controller!.play();
       } else {
-        _controller.pause();
+        _controller!.pause();
       }
     }
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    // Don't dispose the controller here since it's managed by the parent
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_controller == null || !_controller!.value.isInitialized) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
     return SingleChildScrollView(
       child: Column(
         children: <Widget>[
@@ -275,13 +305,13 @@ class _ButterFlyAssetVideoState extends State<_ButterFlyAssetVideo> {
           Container(
             padding: const EdgeInsets.all(20),
             child: AspectRatio(
-              aspectRatio: _controller.value.aspectRatio,
+              aspectRatio: _controller!.value.aspectRatio,
               child: Stack(
                 alignment: Alignment.bottomCenter,
                 children: <Widget>[
-                  VideoPlayer(_controller),
-                  _ControlsOverlay(controller: _controller),
-                  VideoProgressIndicator(_controller, allowScrubbing: true),
+                  VideoPlayer(_controller!),
+                  _ControlsOverlay(controller: _controller!),
+                  VideoProgressIndicator(_controller!, allowScrubbing: true),
                 ],
               ),
             ),
