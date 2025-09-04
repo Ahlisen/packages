@@ -54,7 +54,7 @@ class _App extends StatelessWidget {
             _ViewTypeTabBar(
               builder:
                   (VideoViewType viewType) =>
-                      _ButterFlyAssetVideoInList(viewType),
+                      _InitializeVideosSimulInList(viewType),
             ),
             _ViewTypeTabBar(
               builder:
@@ -121,18 +121,18 @@ class _ViewTypeTabBarState extends State<_ViewTypeTabBar>
   }
 }
 
-class _ButterFlyAssetVideoInList extends StatefulWidget {
-  const _ButterFlyAssetVideoInList(this.viewType);
+class _InitializeVideosSimulInList extends StatefulWidget {
+  const _InitializeVideosSimulInList(this.viewType);
 
   final VideoViewType viewType;
 
   @override
-  _ButterFlyAssetVideoInListState createState() =>
-      _ButterFlyAssetVideoInListState();
+  _InitializeVideosSimulInListState createState() =>
+      _InitializeVideosSimulInListState();
 }
 
-class _ButterFlyAssetVideoInListState
-    extends State<_ButterFlyAssetVideoInList> {
+class _InitializeVideosSimulInListState
+    extends State<_InitializeVideosSimulInList> {
   late PageController _pageController;
   int _currentPage = 0;
   late List<VideoPlayerController> _videoControllers;
@@ -166,6 +166,7 @@ class _ButterFlyAssetVideoInListState
 
       controller.setLooping(true);
       if (i != 0) {
+        // Initialize all videos except the first one for easier debugging
         controller.initialize().then((_) {
           if (i == _currentPage) {
             controller.play();
@@ -358,12 +359,10 @@ class _BumbleBeeRemoteVideoState extends State<_BumbleBeeRemoteVideo> {
     );
 
     _controller.addListener(() {
-      // print('FOO $_controller');
-      // print('FOO dataSource: ${_controller.dataSource}');
       setState(() {});
     });
     _controller.setLooping(true);
-    _controller.initialize(); //.then((_) => setState(() {}));
+    _controller.initialize();
   }
 
   @override
