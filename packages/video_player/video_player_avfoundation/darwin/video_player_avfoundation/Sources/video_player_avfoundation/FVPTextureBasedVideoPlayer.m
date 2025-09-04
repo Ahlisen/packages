@@ -86,6 +86,11 @@
   _displayLink.running = self.isPlaying || self.waitingForFrame;
 }
 
+- (void)loadAsset:(NSURL *)url httpHeaders:(NSDictionary<NSString *,NSString *> *)httpHeaders {
+    [self expectFrame];
+    [super loadAsset:url httpHeaders:httpHeaders];
+}
+
 - (void)seekTo:(NSInteger)position completion:(void (^)(FlutterError *_Nullable))completion {
   CMTime previousCMTime = self.player.currentTime;
   [super seekTo:position
