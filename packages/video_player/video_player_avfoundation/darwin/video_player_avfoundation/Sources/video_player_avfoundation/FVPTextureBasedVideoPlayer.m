@@ -5,6 +5,9 @@
 #import "./include/video_player_avfoundation/FVPTextureBasedVideoPlayer.h"
 #import "./include/video_player_avfoundation/FVPTextureBasedVideoPlayer_Test.h"
 
+#define MAXIMUM_FRAME_WAIT_IN_SECONDS 0.2
+
+
 @interface FVPTextureBasedVideoPlayer ()
 // The updater that drives callbacks to the engine to indicate that a new frame is ready.
 @property(nonatomic) FVPFrameUpdater *frameUpdater;
@@ -75,6 +78,18 @@
   self.waitingForFrame = YES;
 
   _displayLink.running = YES;
+    
+    // Timeout for displaying the first frame. As long as textureFrameAvailable has been called before this timeout,
+    // the engine will correctly trigger copyPixelBuffer when the FlutterTexture is instantiated.
+    dispatch_time_t maxWaitTime = dispatch_time(DISPATCH_TIME_NOW, (int64_t)(MAXIMUM_FRAME_WAIT_IN_SECONDS * NSEC_PER_SEC));
+    __weak FVPTextureBasedVideoPlayer *weakSelf = self;
+    dispatch_after(maxWaitTime, dispatch_get_main_queue(), ^(void){
+        if (!weakSelf.isPlaying) {
+            weakSelf.displayLink.running = NO;
+            weakSelf.waitingForFrame = NO;
+        }
+    });
+    
 }
 
 #pragma mark - Overrides
@@ -87,8 +102,8 @@
 }
 
 - (void)loadAsset:(NSURL *)url httpHeaders:(NSDictionary<NSString *,NSString *> *)httpHeaders {
-    [self expectFrame];
     [super loadAsset:url httpHeaders:httpHeaders];
+    [self expectFrame];
 }
 
 - (void)seekTo:(NSInteger)position completion:(void (^)(FlutterError *_Nullable))completion {

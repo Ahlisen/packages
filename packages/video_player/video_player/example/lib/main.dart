@@ -136,7 +136,7 @@ class _ButterFlyAssetVideoInListState
   late PageController _pageController;
   int _currentPage = 0;
   late List<VideoPlayerController> _videoControllers;
-  final List<String> _videoAssets = [
+  final List<String> _videoAssets = <String>[
     'assets/Butterfly-209.mp4',
     'https://flutter.github.io/assets-for-api-docs/assets/videos/bee.mp4',
     'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
@@ -146,7 +146,7 @@ class _ButterFlyAssetVideoInListState
   void initState() {
     super.initState();
     _pageController = PageController();
-    _videoControllers = [];
+    _videoControllers = <VideoPlayerController>[];
 
     for (int i = 0; i < _videoAssets.length; i++) {
       final String asset = _videoAssets[i];
@@ -165,11 +165,13 @@ class _ButterFlyAssetVideoInListState
       }
 
       controller.setLooping(true);
-      controller.initialize().then((_) {
-        if (i == _currentPage) {
-          controller.play();
-        }
-      });
+      if (i != 0) {
+        controller.initialize().then((_) {
+          if (i == _currentPage) {
+            controller.play();
+          }
+        });
+      }
 
       _videoControllers.add(controller);
     }
@@ -294,7 +296,7 @@ class _VideoState extends State<_Video> {
   @override
   Widget build(BuildContext context) {
     if (_controller == null || !_controller!.value.isInitialized) {
-      return const Center(child: CircularProgressIndicator());
+      return const Center(child: Text('Not Loaded'));
     }
 
     return SingleChildScrollView(
