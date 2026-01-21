@@ -146,7 +146,7 @@ class _InitializeVideosSimulInListState
     _pageController = PageController();
     _videoControllers = <VideoPlayerController>[];
 
-    for (int i = 0; i < _videoAssets.length; i++) {
+    for (var i = 0; i < _videoAssets.length; i++) {
       final String asset = _videoAssets[i];
       final VideoPlayerController controller;
 
