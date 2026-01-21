@@ -162,8 +162,6 @@ class AndroidVideoPlayer extends VideoPlayerPlatform {
 
   @override
   Future<void> load(int playerId, DataSource dataSource) async {
-    String? asset;
-    String? packageName;
     String? uri;
     PlatformVideoFormat? formatHint;
     final Map<String, String> httpHeaders = dataSource.httpHeaders;
@@ -193,8 +191,6 @@ class AndroidVideoPlayer extends VideoPlayerPlatform {
     }
     final message = LoadMessage(
       playerId: playerId,
-      asset: asset,
-      packageName: packageName,
       uri: uri,
       httpHeaders: httpHeaders,
       formatHint: formatHint,

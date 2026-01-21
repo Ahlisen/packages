@@ -104,9 +104,7 @@ class TexturePlayerIds {
 class LoadMessage {
   LoadMessage(this.playerId, {required this.httpHeaders});
   int playerId;
-  String? asset;
   String? uri;
-  String? packageName;
   PlatformVideoFormat? formatHint;
   Map<String, String> httpHeaders;
   String? userAgent;

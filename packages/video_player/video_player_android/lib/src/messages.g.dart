@@ -254,6 +254,7 @@ class ReloadingStartEvent extends PlatformVideoEvent {
   });
 
   /// Placeholder field required for Pigeon serialization.
+  /// https://github.com/flutter/flutter/issues/162466
   bool placeholder;
 
   List<Object?> _toList() {
@@ -492,9 +493,7 @@ class TexturePlayerIds {
 class LoadMessage {
   LoadMessage({
     required this.playerId,
-    this.asset,
     this.uri,
-    this.packageName,
     this.formatHint,
     required this.httpHeaders,
     this.userAgent,
@@ -502,11 +501,7 @@ class LoadMessage {
 
   int playerId;
 
-  String? asset;
-
   String? uri;
-
-  String? packageName;
 
   PlatformVideoFormat? formatHint;
 
@@ -517,9 +512,7 @@ class LoadMessage {
   List<Object?> _toList() {
     return <Object?>[
       playerId,
-      asset,
       uri,
-      packageName,
       formatHint,
       httpHeaders,
       userAgent,
@@ -533,12 +526,10 @@ class LoadMessage {
     result as List<Object?>;
     return LoadMessage(
       playerId: result[0]! as int,
-      asset: result[1] as String?,
-      uri: result[2] as String?,
-      packageName: result[3] as String?,
-      formatHint: result[4] as PlatformVideoFormat?,
-      httpHeaders: (result[5] as Map<Object?, Object?>?)!.cast<String, String>(),
-      userAgent: result[6] as String?,
+      uri: result[1] as String?,
+      formatHint: result[2] as PlatformVideoFormat?,
+      httpHeaders: (result[3] as Map<Object?, Object?>?)!.cast<String, String>(),
+      userAgent: result[4] as String?,
     );
   }
 

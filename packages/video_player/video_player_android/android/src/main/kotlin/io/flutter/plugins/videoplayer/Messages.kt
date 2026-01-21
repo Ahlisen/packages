@@ -272,7 +272,10 @@ data class AudioTrackChangedEvent (
  * Generated class from Pigeon that represents data sent in messages.
  */
 data class ReloadingStartEvent (
-  /** Placeholder field required for Pigeon serialization. */
+  /**
+   * Placeholder field required for Pigeon serialization.
+   * https://github.com/flutter/flutter/issues/162466
+   */
   val placeholder: Boolean
 ) : PlatformVideoEvent()
  {
@@ -443,9 +446,7 @@ data class TexturePlayerIds (
 /** Generated class from Pigeon that represents data sent in messages. */
 data class LoadMessage (
   val playerId: Long,
-  val asset: String? = null,
   val uri: String? = null,
-  val packageName: String? = null,
   val formatHint: PlatformVideoFormat? = null,
   val httpHeaders: Map<String, String>,
   val userAgent: String? = null
@@ -454,21 +455,17 @@ data class LoadMessage (
   companion object {
     fun fromList(pigeonVar_list: List<Any?>): LoadMessage {
       val playerId = pigeonVar_list[0] as Long
-      val asset = pigeonVar_list[1] as String?
-      val uri = pigeonVar_list[2] as String?
-      val packageName = pigeonVar_list[3] as String?
-      val formatHint = pigeonVar_list[4] as PlatformVideoFormat?
-      val httpHeaders = pigeonVar_list[5] as Map<String, String>
-      val userAgent = pigeonVar_list[6] as String?
-      return LoadMessage(playerId, asset, uri, packageName, formatHint, httpHeaders, userAgent)
+      val uri = pigeonVar_list[1] as String?
+      val formatHint = pigeonVar_list[2] as PlatformVideoFormat?
+      val httpHeaders = pigeonVar_list[3] as Map<String, String>
+      val userAgent = pigeonVar_list[4] as String?
+      return LoadMessage(playerId, uri, formatHint, httpHeaders, userAgent)
     }
   }
   fun toList(): List<Any?> {
     return listOf(
       playerId,
-      asset,
       uri,
-      packageName,
       formatHint,
       httpHeaders,
       userAgent,
