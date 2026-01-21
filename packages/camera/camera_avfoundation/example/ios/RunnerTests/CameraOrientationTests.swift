@@ -1,4 +1,4 @@
-// Copyright 2013 The Flutter Authors. All rights reserved.
+// Copyright 2013 The Flutter Authors
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -41,7 +41,7 @@ final class CameraOrientationTests: XCTestCase {
       messenger: MockFlutterBinaryMessenger(),
       globalAPI: mockEventAPI,
       deviceDiscoverer: mockDeviceDiscoverer,
-      permissionManager: MockFLTCameraPermissionManager(),
+      permissionManager: MockCameraPermissionManager(),
       deviceFactory: { _ in mockDevice },
       captureSessionFactory: { MockCaptureSession() },
       captureDeviceInputFactory: MockCaptureDeviceInputFactory(),
@@ -130,7 +130,7 @@ final class CameraOrientationTests: XCTestCase {
         messenger: MockFlutterBinaryMessenger(),
         globalAPI: mockEventAPI,
         deviceDiscoverer: mockDeviceDiscoverer,
-        permissionManager: MockFLTCameraPermissionManager(),
+        permissionManager: MockCameraPermissionManager(),
         deviceFactory: { _ in weakDevice! },
         captureSessionFactory: { MockCaptureSession() },
         captureDeviceInputFactory: MockCaptureDeviceInputFactory(),

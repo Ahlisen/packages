@@ -1,4 +1,4 @@
-// Copyright 2013 The Flutter Authors. All rights reserved.
+// Copyright 2013 The Flutter Authors
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -21,15 +21,11 @@ public interface VideoPlayerCallbacks {
 
   void onReloadingStart();
 
-  void onBufferingStart();
-
-  void onBufferingUpdate(long bufferedPosition);
-
-  void onBufferingEnd();
-
-  void onCompleted();
+  void onPlaybackStateChanged(@NonNull PlatformPlaybackState state);
 
   void onError(@NonNull String code, @Nullable String message, @Nullable Object details);
 
   void onIsPlayingStateUpdate(boolean isPlaying);
+
+  void onAudioTrackChanged(@Nullable String selectedTrackId);
 }

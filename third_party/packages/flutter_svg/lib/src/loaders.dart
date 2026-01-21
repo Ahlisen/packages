@@ -47,7 +47,7 @@ class SvgTheme {
   /// Creates a [vg.SvgTheme] from this.
   vg.SvgTheme toVgTheme() {
     return vg.SvgTheme(
-      currentColor: vg.Color(currentColor.value),
+      currentColor: vg.Color(currentColor.toARGB32()),
       fontSize: fontSize,
       xHeight: xHeight,
     );
@@ -111,7 +111,7 @@ class _DelegateVgColorMapper extends vg.ColorMapper {
       attributeName,
       Color(color.value),
     );
-    return vg.Color(substituteColor.value);
+    return vg.Color(substituteColor.toARGB32());
   }
 }
 
@@ -162,10 +162,9 @@ abstract class SvgLoader<T> extends BytesLoader {
               .encodeSvg(
                 xml: provideSvg(message),
                 theme: theme.toVgTheme(),
-                colorMapper:
-                    colorMapper == null
-                        ? null
-                        : _DelegateVgColorMapper(colorMapper!),
+                colorMapper: colorMapper == null
+                    ? null
+                    : _DelegateVgColorMapper(colorMapper!),
                 debugName: 'Svg loader',
                 enableClippingOptimizer: false,
                 enableMaskingOptimizer: false,
@@ -379,7 +378,7 @@ class SvgAssetLoader extends SvgLoader<ByteData> {
 
   @override
   String provideSvg(ByteData? message) =>
-      utf8.decode(message!.buffer.asUint8List(), allowMalformed: true);
+      utf8.decode(Uint8List.sublistView(message!), allowMalformed: true);
 
   @override
   SvgCacheKey cacheKey(BuildContext? context) {

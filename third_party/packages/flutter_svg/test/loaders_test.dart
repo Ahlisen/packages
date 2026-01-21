@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'dart:typed_data';
+
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -11,8 +14,8 @@ void main() {
   });
 
   test('ColorMapper updates the cache', () async {
-    const TestLoader loaderA = TestLoader();
-    const TestLoader loaderB = TestLoader(colorMapper: _TestColorMapper());
+    const loaderA = TestLoader();
+    const loaderB = TestLoader(colorMapper: _TestColorMapper());
     final ByteData bytesA = await loaderA.loadBytes(null);
     final ByteData bytesB = await loaderB.loadBytes(null);
     expect(identical(bytesA, bytesB), false);
@@ -20,10 +23,10 @@ void main() {
   });
 
   test('SvgTheme updates the cache', () async {
-    const TestLoader loaderA = TestLoader(
+    const loaderA = TestLoader(
       theme: SvgTheme(currentColor: Color(0xFFABCDEF)),
     );
-    const TestLoader loaderB = TestLoader(
+    const loaderB = TestLoader(
       theme: SvgTheme(currentColor: Color(0xFFFEDCBA)),
     );
     final ByteData bytesA = await loaderA.loadBytes(null);
@@ -33,7 +36,7 @@ void main() {
   });
 
   test('Uses the cache', () async {
-    const TestLoader loader = TestLoader();
+    const loader = TestLoader();
     final ByteData bytes = await loader.loadBytes(null);
     final ByteData bytes2 = await loader.loadBytes(null);
     expect(identical(bytes, bytes2), true);
@@ -42,7 +45,7 @@ void main() {
 
   test('Empty cache', () async {
     svg.cache.maximumSize = 0;
-    const TestLoader loader = TestLoader();
+    const loader = TestLoader();
     final ByteData bytes = await loader.loadBytes(null);
     final ByteData bytes2 = await loader.loadBytes(null);
     expect(identical(bytes, bytes2), false);
@@ -50,12 +53,12 @@ void main() {
   });
 
   test('AssetLoader respects packages', () async {
-    final TestBundle bundle = TestBundle(<String, ByteData>{
+    final bundle = TestBundle(<String, ByteData>{
       'foo': Uint8List(0).buffer.asByteData(),
       'packages/packageName/foo': Uint8List(1).buffer.asByteData(),
     });
-    final SvgAssetLoader loader = SvgAssetLoader('foo', assetBundle: bundle);
-    final SvgAssetLoader packageLoader = SvgAssetLoader(
+    final loader = SvgAssetLoader('foo', assetBundle: bundle);
+    final packageLoader = SvgAssetLoader(
       'foo',
       assetBundle: bundle,
       packageName: 'packageName',
@@ -64,12 +67,35 @@ void main() {
     expect((await packageLoader.prepareMessage(null))!.lengthInBytes, 1);
   });
 
+  test('AssetLoader correctly accesses buffer', () async {
+    final ByteBuffer buffer = utf8.encode('foobar').buffer;
+    final bundle = TestBundle(<String, ByteData>{
+      'foo': buffer.asByteData(0, 3),
+      'bar': buffer.asByteData(3, 3),
+    });
+    final loaderFoo = SvgAssetLoader('foo', assetBundle: bundle);
+    final loaderBar = SvgAssetLoader('bar', assetBundle: bundle);
+    final ByteData? byteDataFoo = await loaderFoo.prepareMessage(null);
+    final ByteData? byteDataBar = await loaderBar.prepareMessage(null);
+
+    expect(byteDataFoo!.buffer, equals(byteDataBar!.buffer));
+
+    expect(byteDataFoo.lengthInBytes, 3);
+    expect(byteDataFoo.offsetInBytes, 0);
+
+    expect(byteDataBar.offsetInBytes, 3);
+    expect(byteDataBar.lengthInBytes, 3);
+
+    expect(loaderFoo.provideSvg(byteDataFoo), equals('foo'));
+    expect(loaderBar.provideSvg(byteDataBar), equals('bar'));
+  });
+
   test('SvgNetworkLoader closes internal client', () async {
-    final List<VerifyCloseClient> createdClients = <VerifyCloseClient>[];
+    final createdClients = <VerifyCloseClient>[];
 
     await http.runWithClient(
       () async {
-        const SvgNetworkLoader loader = SvgNetworkLoader('');
+        const loader = SvgNetworkLoader('');
 
         expect(createdClients, isEmpty);
         await loader.prepareMessage(null);
@@ -78,7 +104,7 @@ void main() {
         expect(createdClients[0].closeCalled, isTrue);
       },
       () {
-        final VerifyCloseClient client = VerifyCloseClient();
+        final client = VerifyCloseClient();
         createdClients.add(client);
         return client;
       },
@@ -86,11 +112,8 @@ void main() {
   });
 
   test("SvgNetworkLoader doesn't close passed client", () async {
-    final VerifyCloseClient client = VerifyCloseClient();
-    final SvgNetworkLoader loader = SvgNetworkLoader(
-      '',
-      httpClient: client as http.Client,
-    );
+    final client = VerifyCloseClient();
+    final loader = SvgNetworkLoader('', httpClient: client as http.Client);
 
     expect(client.closeCalled, isFalse);
     await loader.prepareMessage(null);

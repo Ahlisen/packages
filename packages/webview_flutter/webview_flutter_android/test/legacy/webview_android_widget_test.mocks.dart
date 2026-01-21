@@ -27,6 +27,7 @@ import 'package:webview_flutter_platform_interface/src/webview_flutter_platform_
 // ignore_for_file: unnecessary_parenthesis
 // ignore_for_file: camel_case_types
 // ignore_for_file: subtype_of_sealed_class
+// ignore_for_file: invalid_use_of_internal_member
 
 class _FakePigeonInstanceManager_0 extends _i1.SmartFake
     implements _i2.PigeonInstanceManager {
@@ -699,6 +700,11 @@ class MockWebResourceRequest extends _i1.Mock
           as bool);
 
   @override
+  bool get isRedirect =>
+      (super.noSuchMethod(Invocation.getter(#isRedirect), returnValue: false)
+          as bool);
+
+  @override
   bool get hasGesture =>
       (super.noSuchMethod(Invocation.getter(#hasGesture), returnValue: false)
           as bool);
@@ -1134,8 +1140,6 @@ class MockWebViewProxy extends _i1.Mock implements _i7.WebViewProxy {
       _i2.WebResourceError,
     )?
     onReceivedRequestError,
-    void Function(_i2.WebViewClient, _i2.WebView, int, String, String)?
-    onReceivedError,
     void Function(_i2.WebViewClient, _i2.WebView, _i2.WebResourceRequest)?
     requestLoading,
     void Function(
@@ -1161,7 +1165,6 @@ class MockWebViewProxy extends _i1.Mock implements _i7.WebViewProxy {
               #onPageStarted: onPageStarted,
               #onPageFinished: onPageFinished,
               #onReceivedRequestError: onReceivedRequestError,
-              #onReceivedError: onReceivedError,
               #requestLoading: requestLoading,
               #onFormResubmission: onFormResubmission,
               #onReceivedClientCertRequest: onReceivedClientCertRequest,
@@ -1174,7 +1177,6 @@ class MockWebViewProxy extends _i1.Mock implements _i7.WebViewProxy {
                 #onPageStarted: onPageStarted,
                 #onPageFinished: onPageFinished,
                 #onReceivedRequestError: onReceivedRequestError,
-                #onReceivedError: onReceivedError,
                 #requestLoading: requestLoading,
                 #onFormResubmission: onFormResubmission,
                 #onReceivedClientCertRequest: onReceivedClientCertRequest,
