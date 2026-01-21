@@ -52,7 +52,9 @@ public abstract class ExoPlayerEventListener implements Player.Listener {
     this.events = events;
   }
 
-    protected abstract void sendInitialized(@NonNull String eventName);
+  protected abstract void sendInitialized();
+
+  protected abstract void sendReloadingEnd();
 
   @Override
   public void onPlaybackStateChanged(final int playbackState) {
@@ -68,10 +70,10 @@ public abstract class ExoPlayerEventListener implements Player.Listener {
         platformState = PlatformPlaybackState.READY;
         if (!isInitialized) {
           isInitialized = true;
-          sendInitialized("initialized");
+          sendInitialized();
         } else if (isLoadingNewAsset) {
           isLoadingNewAsset = false;
-          sendInitialized("reloadingEnd");
+          sendReloadingEnd();
         }
         break;
       case Player.STATE_ENDED:

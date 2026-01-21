@@ -149,7 +149,7 @@ class AVFoundationVideoPlayer extends VideoPlayerPlatform {
       case DataSourceType.contentUri:
         uri = dataSource.uri;
     }
-    final LoadMessage message = LoadMessage(
+    final message = LoadMessage(
       playerId: playerId,
       asset: asset,
       packageName: packageName,

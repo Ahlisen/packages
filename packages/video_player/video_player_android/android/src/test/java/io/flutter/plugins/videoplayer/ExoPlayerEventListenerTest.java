@@ -47,9 +47,12 @@ public final class ExoPlayerEventListenerTest {
     }
 
     @Override
-    protected void sendInitialized(String eventName) {
+    protected void sendInitialized() {
       calledSendInitialized = true;
     }
+
+    @Override
+    protected void sendReloadingEnd() {}
 
     boolean calledSendInitialized() {
       return calledSendInitialized;

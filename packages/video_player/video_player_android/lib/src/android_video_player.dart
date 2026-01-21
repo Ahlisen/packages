@@ -191,7 +191,7 @@ class AndroidVideoPlayer extends VideoPlayerPlatform {
     if (uri == null) {
       throw ArgumentError('Unable to construct a video asset from $dataSource');
     }
-    final LoadMessage message = LoadMessage(
+    final message = LoadMessage(
       playerId: playerId,
       asset: asset,
       packageName: packageName,
@@ -531,14 +531,18 @@ class _PlayerInstance {
             !_audioTrackSelectionCompleter!.isCompleted) {
           _audioTrackSelectionCompleter!.complete();
         }
-      // TODO: Add cases for these:
-    'reloadingStart' => VideoEvent(eventType: VideoEventType.reloadingStart),
-    'reloadingEnd' => VideoEvent(
-    eventType: VideoEventType.reloadingEnd,
-    duration: Duration(milliseconds: map['duration'] as int),
-    size: Size((map['width'] as num?)?.toDouble() ?? 0.0,
-    (map['height'] as num?)?.toDouble() ?? 0.0),
-    ),
+      case ReloadingStartEvent _:
+        _eventStreamController.add(
+          VideoEvent(eventType: VideoEventType.reloadingStart),
+        );
+      case ReloadingEndEvent _:
+        _eventStreamController.add(
+          VideoEvent(
+            eventType: VideoEventType.reloadingEnd,
+            duration: Duration(milliseconds: event.duration),
+            size: Size(event.width.toDouble(), event.height.toDouble()),
+          ),
+        );
     }
   }
 

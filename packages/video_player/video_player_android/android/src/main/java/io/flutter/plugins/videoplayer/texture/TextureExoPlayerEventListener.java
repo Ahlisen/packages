@@ -25,7 +25,7 @@ public final class TextureExoPlayerEventListener extends ExoPlayerEventListener 
   }
 
   @Override
-  protected void sendInitialized(@NonNull String eventName) {
+  protected void sendInitialized() {
     VideoSize videoSize = exoPlayer.getVideoSize();
     RotationDegrees rotationCorrection = RotationDegrees.ROTATE_0;
     int width = videoSize.width;
@@ -48,13 +48,13 @@ public final class TextureExoPlayerEventListener extends ExoPlayerEventListener 
         }
       }
     }
-    events.onInitialized(
-      width,
-      height,
-      exoPlayer.getDuration(),
-      rotationCorrection.getDegrees(),
-      eventName
-    );
+    events.onInitialized(width, height, exoPlayer.getDuration(), rotationCorrection.getDegrees());
+  }
+
+  @Override
+  protected void sendReloadingEnd() {
+    VideoSize videoSize = exoPlayer.getVideoSize();
+    events.onReloadingEnd(videoSize.width, videoSize.height, exoPlayer.getDuration());
   }
 
   @OptIn(markerClass = androidx.media3.common.util.UnstableApi.class)

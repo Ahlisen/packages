@@ -60,6 +60,25 @@ class AudioTrackChangedEvent extends PlatformVideoEvent {
   late final String? selectedTrackId;
 }
 
+/// Sent when the video starts reloading.
+class ReloadingStartEvent extends PlatformVideoEvent {
+  /// Placeholder field required for Pigeon serialization.
+  /// https://github.com/flutter/flutter/issues/162466
+  late final bool placeholder;
+}
+
+/// Sent when the video finishes reloading and is ready to play again.
+class ReloadingEndEvent extends PlatformVideoEvent {
+  /// The video duration in milliseconds.
+  late final int duration;
+
+  /// The width of the video in pixels.
+  late final int width;
+
+  /// The height of the video in pixels.
+  late final int height;
+}
+
 /// Information passed to the platform view creation.
 class PlatformVideoViewCreationParams {
   const PlatformVideoViewCreationParams({required this.playerId});

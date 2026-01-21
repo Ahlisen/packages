@@ -14,7 +14,7 @@ import io.flutter.FlutterInjector;
 import io.flutter.Log;
 import io.flutter.embedding.engine.plugins.FlutterPlugin;
 import io.flutter.plugin.common.BinaryMessenger;
-import io.flutter.plugins.videoplayer.Messages.LoadMessage;
+import io.flutter.plugins.videoplayer.LoadMessage;
 import io.flutter.plugins.videoplayer.platformview.PlatformVideoViewFactory;
 import io.flutter.plugins.videoplayer.platformview.PlatformViewVideoPlayer;
 import io.flutter.plugins.videoplayer.texture.TextureVideoPlayer;
@@ -176,7 +176,7 @@ public class VideoPlayerPlugin implements FlutterPlugin, AndroidVideoPlayerApi {
 
   public void load(@NonNull LoadMessage arg) {
     VideoPlayer player = getPlayer(arg.getPlayerId());
-      // TODO: Reuse videoAssetWithOptions(options) instead
+    // TODO(Fredrik): Reuse videoAssetWithOptions(options) instead
     final VideoAsset videoAsset;
     if (arg.getAsset() != null) {
       String assetLookupKey;
