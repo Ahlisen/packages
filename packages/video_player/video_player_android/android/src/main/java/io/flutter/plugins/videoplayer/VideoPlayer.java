@@ -113,6 +113,11 @@ public abstract class VideoPlayer implements VideoPlayerInstanceApi {
   }
 
   @Override
+  public void stop() {
+    exoPlayer.stop();
+  }
+
+  @Override
   public void setLooping(boolean looping) {
     exoPlayer.setRepeatMode(looping ? REPEAT_MODE_ALL : REPEAT_MODE_OFF);
   }

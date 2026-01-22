@@ -19,7 +19,7 @@ class _App extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 3,
+      length: 4,
       child: Scaffold(
         key: const ValueKey<String>('home_page'),
         appBar: AppBar(
@@ -44,22 +44,25 @@ class _App extends StatelessWidget {
               Tab(icon: Icon(Icons.list), text: 'List example'),
               Tab(icon: Icon(Icons.cloud), text: 'Remote'),
               Tab(icon: Icon(Icons.insert_drive_file), text: 'Asset'),
+              Tab(icon: Icon(Icons.dynamic_feed), text: 'Multiplay'),
             ],
           ),
         ),
         body: TabBarView(
           children: <Widget>[
             _ViewTypeTabBar(
-              builder:
-                  (VideoViewType viewType) =>
-                      _InitializeVideosSimulInList(viewType),
+              builder: (VideoViewType viewType) =>
+                  _InitializeVideosSimulInList(viewType),
             ),
             _ViewTypeTabBar(
               builder: (VideoViewType viewType) =>
                   _BumbleBeeRemoteVideo(viewType),
             ),
             _ViewTypeTabBar(
-              builder: (VideoViewType viewType) => _Video(viewType),
+              builder: (VideoViewType viewType) => const Text('Hello'),
+            ),
+            _ViewTypeTabBar(
+              builder: (VideoViewType viewType) => _MultiplePlayers(viewType),
             ),
           ],
         ),
@@ -211,9 +214,7 @@ class _InitializeVideosSimulInListState
             children: <Widget>[
               const ListTile(leading: Icon(Icons.cake), title: Text('Video 1')),
               _Video(
-                controller:
-                    _videoControllers.isNotEmpty ? _videoControllers[0] : null,
-                widget.viewType,
+                _videoControllers.isNotEmpty ? _videoControllers[0] : null,
                 shouldPlay: _currentPage == 0,
               ),
             ],
@@ -224,9 +225,7 @@ class _InitializeVideosSimulInListState
             children: <Widget>[
               const ListTile(leading: Icon(Icons.cake), title: Text('Video 2')),
               _Video(
-                controller:
-                    _videoControllers.isNotEmpty ? _videoControllers[1] : null,
-                widget.viewType,
+                _videoControllers.isNotEmpty ? _videoControllers[1] : null,
                 shouldPlay: _currentPage == 1,
               ),
             ],
@@ -237,9 +236,7 @@ class _InitializeVideosSimulInListState
             children: <Widget>[
               const ListTile(leading: Icon(Icons.cake), title: Text('Video 3')),
               _Video(
-                controller:
-                    _videoControllers.isNotEmpty ? _videoControllers[2] : null,
-                widget.viewType,
+                _videoControllers.isNotEmpty ? _videoControllers[2] : null,
                 shouldPlay: _currentPage == 2,
               ),
             ],
@@ -251,11 +248,17 @@ class _InitializeVideosSimulInListState
 }
 
 class _Video extends StatefulWidget {
-  const _Video(this.viewType, {this.controller, this.shouldPlay = true});
+  const _Video(
+    this.controller, {
+    this.shouldPlay = true,
+    this.showControls = true,
+    this.showProgressIndicator = true,
+  });
 
-  final VideoViewType viewType;
   final VideoPlayerController? controller;
   final bool shouldPlay;
+  final bool showControls;
+  final bool showProgressIndicator;
 
   @override
   _VideoState createState() => _VideoState();
@@ -311,14 +314,95 @@ class _VideoState extends State<_Video> {
                 alignment: Alignment.bottomCenter,
                 children: <Widget>[
                   VideoPlayer(_controller!),
-                  _ControlsOverlay(controller: _controller!),
-                  VideoProgressIndicator(_controller!, allowScrubbing: true),
+                  if (widget.showControls)
+                    _ControlsOverlay(controller: _controller!),
+                  if (widget.showProgressIndicator)
+                    VideoProgressIndicator(_controller!, allowScrubbing: true),
                 ],
               ),
             ),
           ),
         ],
       ),
+    );
+  }
+}
+
+class _MultiplePlayers extends StatefulWidget {
+  const _MultiplePlayers(this.viewType);
+
+  final VideoViewType viewType;
+
+  @override
+  _MultiplePlayersState createState() => _MultiplePlayersState();
+}
+
+class _MultiplePlayersState extends State<_MultiplePlayers> {
+  late List<VideoPlayerController> _videoControllers;
+  final List<String> _videoAssets = <String>[
+    'assets/Butterfly-209.mp4',
+    'https://flutter.github.io/assets-for-api-docs/assets/videos/bee.mp4',
+    'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _videoControllers = <VideoPlayerController>[];
+
+    for (var i = 0; i < _videoAssets.length; i++) {
+      final String asset = _videoAssets[i];
+      final VideoPlayerController controller;
+
+      if (asset.startsWith('http')) {
+        controller = VideoPlayerController.networkUrl(
+          Uri.parse(asset),
+          viewType: widget.viewType,
+          videoPlayerOptions: VideoPlayerOptions(mixWithOthers: true),
+        );
+      } else {
+        controller = VideoPlayerController.asset(
+          asset,
+          viewType: widget.viewType,
+          videoPlayerOptions: VideoPlayerOptions(mixWithOthers: true),
+        );
+      }
+
+      controller
+        ..setLooping(true)
+        ..initialize().then((_) {
+          controller.play();
+        });
+      _videoControllers.add(controller);
+    }
+  }
+
+  @override
+  void dispose() {
+    for (final VideoPlayerController controller in _videoControllers) {
+      controller.dispose();
+    }
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        for (final controller in _videoControllers)
+          Expanded(
+            child: GestureDetector(
+              onTap: () {
+                if (controller.value.isPlaying) {
+                  controller.pause();
+                } else {
+                  controller.play();
+                }
+              },
+              child: _Video(controller, showControls: false),
+            ),
+          ),
+      ],
     );
   }
 }
@@ -374,28 +458,42 @@ class _BumbleBeeRemoteVideoState extends State<_BumbleBeeRemoteVideo> {
     return SingleChildScrollView(
       child: Column(
         children: <Widget>[
-          Container(padding: const EdgeInsets.only(top: 20.0)),
-          const Text('With remote mp4'),
-          Container(
-            padding: const EdgeInsets.all(20),
+          SizedBox(
+            height: 400,
             child: AspectRatio(
               aspectRatio: _controller.value.aspectRatio,
               child: Stack(
-                alignment: Alignment.bottomCenter,
+                alignment: Alignment.center,
                 children: <Widget>[
-                  VideoPlayer(_controller),
-                  ClosedCaption(text: _controller.value.caption.text),
-                  _ControlsOverlay(controller: _controller),
-                  VideoProgressIndicator(_controller, allowScrubbing: true),
+                  _Video(_controller),
                 ],
               ),
             ),
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            spacing: 4,
+            children: [
+              FilledButton(
+                onPressed: () {
+                  _controller.stop();
+                },
+                child: const Text('STOP'),
+              ),
+              FilledButton(
+                onPressed: () {
+                  _controller.initialize();
+                  _controller.setLooping(true);
+                },
+                child: const Text('INITIALIZE'),
+              ),
+            ],
           ),
           TextButton(
             onPressed: () {
               _controller.loadAsset(
                 Uri.parse(
-                  'https://flutter.github.io/assets-for-api-docs/assets/videos/butterfly.mp4',
+                  'https://cdn.mono-digital.com/challenges/d9b4cb50-a56c-47b1-b368-c9397c3d356a/contributions/de76015c-df4a-4bdc-85ee-a97509d71ed8/c4ab30b6-a6b4-4c01-a349-283cb6521de2.mp4',
                 ),
               );
             },
@@ -415,7 +513,7 @@ class _BumbleBeeRemoteVideoState extends State<_BumbleBeeRemoteVideo> {
             onPressed: () {
               _controller.loadAsset(
                 Uri.parse(
-                  'https://flutter.github.io/assets-for-api-docs/assets/videos/bee.mp4',
+                  'https://cdn.mono-digital.com/challenges/be599c70-16c5-4368-8e96-88caec9db6e8/d250a736-ff7e-43fe-95ce-6a81861feed0.mp4',
                 ),
               );
             },
@@ -426,7 +524,7 @@ class _BumbleBeeRemoteVideoState extends State<_BumbleBeeRemoteVideo> {
               _controller.dispose();
               _controller = VideoPlayerController.networkUrl(
                 Uri.parse(
-                  'https://flutter.github.io/assets-for-api-docs/assets/videos/butterfly.mp4',
+                  'https://cdn.mono-digital.com/challenges/d9b4cb50-a56c-47b1-b368-c9397c3d356a/b0ecdcbf-7091-4ce7-91f7-fb50c86be975.mp4',
                 ),
                 closedCaptionFile: _loadCaptions(),
                 videoPlayerOptions: VideoPlayerOptions(mixWithOthers: true),
@@ -445,7 +543,7 @@ class _BumbleBeeRemoteVideoState extends State<_BumbleBeeRemoteVideo> {
               _controller.dispose();
               _controller = VideoPlayerController.networkUrl(
                 Uri.parse(
-                  'https://flutter.github.io/assets-for-api-docs/assets/videos/bee.mp4',
+                  'https://cdn.mono-digital.com/challenges/d9b4cb50-a56c-47b1-b368-c9397c3d356a/contributions/de76015c-df4a-4bdc-85ee-a97509d71ed8/c4ab30b6-a6b4-4c01-a349-283cb6521de2.mp4',
                 ),
                 closedCaptionFile: _loadCaptions(),
                 videoPlayerOptions: VideoPlayerOptions(mixWithOthers: true),

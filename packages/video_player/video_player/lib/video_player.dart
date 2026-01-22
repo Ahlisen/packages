@@ -500,7 +500,6 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
 
       switch (event.eventType) {
         case VideoEventType.initialized:
-          print('VideoPlayer initialized ${dataSource.split('/').last} ${event.duration} ${event.size}');
           value = value.copyWith(
             duration: event.duration,
             size: event.size,
@@ -540,13 +539,14 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
         case VideoEventType.reloadingStart:
           break;
         case VideoEventType.reloadingEnd:
-          print('VideoPlayer reloadingEnd ${dataSource.split('/').last} ${event.duration} ${event.size}');
-          value = value.copyWith(
-            isReadyToDisplay: true,
-            duration: event.duration,
-            size: event.size,
-          );
-          _newAssetCompleter?.complete(null);
+          if (_newAssetCompleter?.isCompleted == false) {
+            value = value.copyWith(
+              isReadyToDisplay: true,
+              duration: event.duration,
+              size: event.size,
+            );
+            _newAssetCompleter?.complete(null);
+          }
         case VideoEventType.isPlayingStateUpdate:
           if (event.isPlaying ?? false) {
             value = value.copyWith(
@@ -631,6 +631,38 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
     await _applyPlayPause();
   }
 
+  Future<void> stop() async {
+    if (_isDisposedOrNotInitialized) {
+      return;
+    }
+    if (_creatingCompleter?.isCompleted == false) {
+      _creatingCompleter?.completeError(
+        PlatformException(
+          code: 'video_player_stopped',
+          message: 'Video player has been stopped.',
+        ),
+      );
+    }
+    if (_newAssetCompleter?.isCompleted == false) {
+      _newAssetCompleter?.completeError(
+        PlatformException(
+          code: 'video_player_stopped',
+          message: 'Video player has been stopped.',
+        ),
+      );
+    }
+    _timer?.cancel();
+    await _videoPlayerPlatform.stop(_playerId);
+    value = value.copyWith(
+      isPlaying: false,
+      position: Duration.zero,
+      buffered: [],
+      isBuffering: false,
+      isReadyToDisplay: false,
+      isCompleted: false,
+    );
+  }
+
   /// If another process accesses the video player while it is loading we can still await the completion of the load.
   Future<void> awaitReadyToDisplay() async {
     if (value.isReadyToDisplay) {
@@ -662,7 +694,6 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
     );
 
     this.dataSource = dataSource.toString();
-    print('VideoPlayer reloadingStart ${this.dataSource.split('/').last}');
 
     _newAssetCompleter = Completer<void>();
 

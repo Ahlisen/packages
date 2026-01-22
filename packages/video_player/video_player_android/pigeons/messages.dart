@@ -207,6 +207,12 @@ abstract class VideoPlayerInstanceApi {
   /// Pauses playback if the video is currently playing.
   void pause();
 
+  /// Stops playback.
+  /// Release the loaded media and resources required for playback.
+  /// The player instance can still be used by calling initialize/load again,
+  /// and dispose must still be called on the player if it's no longer required.
+  void stop();
+
   /// Seeks to the given playback position, in milliseconds.
   void seekTo(int position);
 

@@ -10,6 +10,7 @@ import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 import androidx.media3.common.MediaItem;
 import androidx.media3.common.util.UnstableApi;
+import androidx.media3.exoplayer.DefaultLoadControl;
 import androidx.media3.exoplayer.ExoPlayer;
 import io.flutter.plugins.videoplayer.ExoPlayerEventListener;
 import io.flutter.plugins.videoplayer.VideoAsset;
@@ -58,10 +59,21 @@ public class PlatformViewVideoPlayer extends VideoPlayer {
         () -> {
           androidx.media3.exoplayer.trackselection.DefaultTrackSelector trackSelector =
               new androidx.media3.exoplayer.trackselection.DefaultTrackSelector(context);
+          // Custom load control for quicker buffering
+          DefaultLoadControl loadControl = new DefaultLoadControl
+            .Builder()
+            .setBufferDurationsMs(
+              /* minBufferMs= */ 1_000,
+              /* maxBufferMs= */ 120_000,
+              /* bufferForPlaybackMs= */ 500,
+              /* bufferForPlaybackAfterRebufferMs= */ 1_000
+            )
+            .build();
           ExoPlayer.Builder builder =
               new ExoPlayer.Builder(context)
                   .setTrackSelector(trackSelector)
-                  .setMediaSourceFactory(asset.getMediaSourceFactory(context));
+                  .setMediaSourceFactory(asset.getMediaSourceFactory(context))
+                  .setLoadControl(loadControl);;
           return builder.build();
         });
   }

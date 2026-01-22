@@ -972,6 +972,13 @@ interface VideoPlayerInstanceApi {
   fun play()
   /** Pauses playback if the video is currently playing. */
   fun pause()
+  /**
+   * Stops playback.
+   * Release the loaded media and resources required for playback.
+   * The player instance can still be used by calling initialize/load again,
+   * and dispose must still be called on the player if it's no longer required.
+   */
+  fun stop()
   /** Seeks to the given playback position, in milliseconds. */
   fun seekTo(position: Long)
   /** Returns the current playback position, in milliseconds. */
@@ -1068,6 +1075,22 @@ interface VideoPlayerInstanceApi {
           channel.setMessageHandler { _, reply ->
             val wrapped: List<Any?> = try {
               api.pause()
+              listOf(null)
+            } catch (exception: Throwable) {
+              MessagesPigeonUtils.wrapError(exception)
+            }
+            reply.reply(wrapped)
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.video_player_android.VideoPlayerInstanceApi.stop$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { _, reply ->
+            val wrapped: List<Any?> = try {
+              api.stop()
               listOf(null)
             } catch (exception: Throwable) {
               MessagesPigeonUtils.wrapError(exception)
