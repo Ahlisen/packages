@@ -426,6 +426,13 @@ NS_INLINE CGFloat radiansToDegrees(CGFloat radians) {
 
 - (void)stopWithError:(FlutterError *_Nullable *_Nonnull)error {
   _isPlaying = NO;
+  if (_listenersRegistered) {
+    AVPlayerItem *previousItem = self.player.currentItem;
+    FVPRemoveKeyValueObservers(self, FVPGetPlayerItemObservations(), previousItem);
+    [[NSNotificationCenter defaultCenter] removeObserver:self
+                                                    name:AVPlayerItemDidPlayToEndTimeNotification
+                                                  object:previousItem];
+  }
   [self.player replaceCurrentItemWithPlayerItem:nil];
 }
 
@@ -492,7 +499,6 @@ NS_INLINE CGFloat radiansToDegrees(CGFloat radians) {
   AVURLAsset *urlAsset = [AVURLAsset URLAssetWithURL:url options:options];
   AVPlayerItem *item = [AVPlayerItem playerItemWithAsset:urlAsset];
 
-  // Remove old observers if they exist
   if (_listenersRegistered) {
     FVPRemoveKeyValueObservers(self, FVPGetPlayerItemObservations(), previousItem);
     [[NSNotificationCenter defaultCenter] removeObserver:self
@@ -503,14 +509,15 @@ NS_INLINE CGFloat radiansToDegrees(CGFloat radians) {
   [item addOutput:_videoOutput];
   [_player replaceCurrentItemWithPlayerItem:item];
 
-  // Set up observers for the new item
-  if (_listenersRegistered) {
-    FVPRegisterKeyValueObservers(self, FVPGetPlayerItemObservations(), item);
-    [[NSNotificationCenter defaultCenter] addObserver:self
-                                             selector:@selector(itemDidPlayToEndTime:)
-                                                 name:AVPlayerItemDidPlayToEndTimeNotification
-                                               object:item];
+  if (!_listenersRegistered) {
+      FVPRegisterKeyValueObservers(self, FVPGetPlayerObservations(), _player);
   }
+  FVPRegisterKeyValueObservers(self, FVPGetPlayerItemObservations(), item);
+  [[NSNotificationCenter defaultCenter] addObserver:self
+                                           selector:@selector(itemDidPlayToEndTime:)
+                                               name:AVPlayerItemDidPlayToEndTimeNotification
+                                             object:item];
+  _listenersRegistered = YES;
 
   if (_eventListener != nil) {
     [_eventListener videoPlayerDidStartReloading];
