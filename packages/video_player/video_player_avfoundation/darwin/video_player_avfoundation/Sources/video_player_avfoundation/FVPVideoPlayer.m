@@ -424,6 +424,11 @@ NS_INLINE CGFloat radiansToDegrees(CGFloat radians) {
   [self updatePlayingState];
 }
 
+- (void)stopWithError:(FlutterError *_Nullable *_Nonnull)error {
+  _isPlaying = NO;
+  [self.player replaceCurrentItemWithPlayerItem:nil];
+}
+
 - (nullable NSNumber *)position:(FlutterError *_Nullable *_Nonnull)error {
   return @(FVPCMTimeToMillis([_player currentTime]));
 }
