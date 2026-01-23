@@ -63,8 +63,8 @@ public class PlatformViewVideoPlayer extends VideoPlayer {
           DefaultLoadControl loadControl = new DefaultLoadControl
             .Builder()
             .setBufferDurationsMs(
-              /* minBufferMs= */ 1_000,
-              /* maxBufferMs= */ 120_000,
+              /* minBufferMs= */ 2_500,
+              /* maxBufferMs= */ 15_000,
               /* bufferForPlaybackMs= */ 500,
               /* bufferForPlaybackAfterRebufferMs= */ 1_000
             )
@@ -73,7 +73,7 @@ public class PlatformViewVideoPlayer extends VideoPlayer {
               new ExoPlayer.Builder(context)
                   .setTrackSelector(trackSelector)
                   .setMediaSourceFactory(asset.getMediaSourceFactory(context))
-                  .setLoadControl(loadControl);;
+                  .setLoadControl(loadControl);
           return builder.build();
         });
   }
