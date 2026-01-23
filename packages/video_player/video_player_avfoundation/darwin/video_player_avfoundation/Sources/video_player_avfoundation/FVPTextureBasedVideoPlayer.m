@@ -1,4 +1,4 @@
-// Copyright 2013 The Flutter Authors. All rights reserved.
+// Copyright 2013 The Flutter Authors
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -57,7 +57,12 @@
     // invisible AVPlayerLayer is used to overwrite the protection of pixel buffers in those streams
     // for issue #1, and restore the correct width and height for issue #2.
     _playerLayer = [AVPlayerLayer playerLayerWithPlayer:self.player];
-    [viewProvider.view.layer addSublayer:self.playerLayer];
+#if TARGET_OS_IOS
+    CALayer *flutterLayer = viewProvider.viewController.view.layer;
+#else
+    CALayer *flutterLayer = viewProvider.view.layer;
+#endif
+    [flutterLayer addSublayer:self.playerLayer];
   }
   return self;
 }

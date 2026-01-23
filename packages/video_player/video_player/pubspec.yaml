@@ -4,11 +4,11 @@ description: Flutter plugin for displaying inline video with other Flutter
 repository: https://github.com/Ahlisen/packages/tree/main/packages/video_player/video_player
 issue_tracker: https://github.com/flutter/flutter/issues?q=is%3Aissue+is%3Aopen+label%3A%22p%3A+video_player%22
 publish_to: none
-version: 2.10.0
+version: 2.10.1
 
 environment:
-  sdk: ^3.7.0
-  flutter: ">=3.29.0"
+  sdk: ^3.8.0
+  flutter: ">=3.32.0"
 
 flutter:
   plugin:

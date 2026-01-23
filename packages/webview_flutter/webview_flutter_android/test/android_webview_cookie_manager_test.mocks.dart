@@ -26,6 +26,7 @@ import 'package:webview_flutter_platform_interface/webview_flutter_platform_inte
 // ignore_for_file: unnecessary_parenthesis
 // ignore_for_file: camel_case_types
 // ignore_for_file: subtype_of_sealed_class
+// ignore_for_file: invalid_use_of_internal_member
 
 class _FakePigeonInstanceManager_0 extends _i1.SmartFake
     implements _i2.PigeonInstanceManager {
@@ -154,6 +155,15 @@ class MockAndroidWebViewController extends _i1.Mock
   _i5.Future<void> loadFile(String? absoluteFilePath) =>
       (super.noSuchMethod(
             Invocation.method(#loadFile, [absoluteFilePath]),
+            returnValue: _i5.Future<void>.value(),
+            returnValueForMissingStub: _i5.Future<void>.value(),
+          )
+          as _i5.Future<void>);
+
+  @override
+  _i5.Future<void> loadFileWithParams(_i3.LoadFileParams? params) =>
+      (super.noSuchMethod(
+            Invocation.method(#loadFileWithParams, [params]),
             returnValue: _i5.Future<void>.value(),
             returnValueForMissingStub: _i5.Future<void>.value(),
           )

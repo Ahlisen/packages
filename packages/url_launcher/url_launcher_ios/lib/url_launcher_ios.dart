@@ -1,4 +1,4 @@
-// Copyright 2013 The Flutter Authors. All rights reserved.
+// Copyright 2013 The Flutter Authors
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -148,6 +148,8 @@ class UrlLauncherIOS extends UrlLauncherPlatform {
         throw _failedSafariViewControllerLoadException(url);
       case InAppLoadResult.invalidUrl:
         throw _invalidUrlException();
+      case InAppLoadResult.noUI:
+        throw _noUIException();
       case InAppLoadResult.dismissed:
         return false;
     }
@@ -176,6 +178,18 @@ class UrlLauncherIOS extends UrlLauncherPlatform {
     throw PlatformException(
       code: 'Error',
       message: 'Error while launching $url',
+    );
+  }
+
+  // TODO(stuartmorgan): Remove this as part of standardizing error handling.
+  // See https://github.com/flutter/flutter/issues/127665
+  //
+  // This PlatformException is designed to match the pattern of the pre-existing
+  // exceptions above.
+  PlatformException _noUIException() {
+    throw PlatformException(
+      code: 'no_ui_available',
+      message: 'No view controller available',
     );
   }
 }

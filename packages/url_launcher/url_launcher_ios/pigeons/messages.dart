@@ -1,4 +1,4 @@
-// Copyright 2013 The Flutter Authors. All rights reserved.
+// Copyright 2013 The Flutter Authors
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -33,6 +33,9 @@ enum InAppLoadResult {
 
   /// The URL could not be launched because it is invalid.
   invalidUrl,
+
+  /// The URL could not be launched because no UI is available.
+  noUI,
 
   /// The controller was closed before loading.
   dismissed,

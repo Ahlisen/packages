@@ -1,4 +1,4 @@
-// Copyright 2013 The Flutter Authors. All rights reserved.
+// Copyright 2013 The Flutter Authors
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -117,20 +117,21 @@ class WebKitWebViewPlatformController extends WebViewPlatformController {
   /// Used to integrate custom user interface elements into web view interactions.
   @visibleForTesting
   late final WKUIDelegate uiDelegate = webViewProxy.createUIDelgate(
-    onCreateWebView: (
-      WKUIDelegate instance,
-      WKWebView webView,
-      WKWebViewConfiguration configuration,
-      WKNavigationAction navigationAction,
-    ) {
-      final bool isForMainFrame =
-          navigationAction.targetFrame?.isMainFrame ?? false;
-      if (!isForMainFrame) {
-        PlatformWebView.fromNativeWebView(
-          webView,
-        ).load(navigationAction.request);
-      }
-    },
+    onCreateWebView:
+        (
+          WKUIDelegate instance,
+          WKWebView webView,
+          WKWebViewConfiguration configuration,
+          WKNavigationAction navigationAction,
+        ) {
+          final bool isForMainFrame =
+              navigationAction.targetFrame?.isMainFrame ?? false;
+          if (!isForMainFrame) {
+            PlatformWebView.fromNativeWebView(
+              webView,
+            ).load(navigationAction.request);
+          }
+        },
   );
 
   /// Methods for handling navigation changes and tracking navigation requests.
@@ -146,29 +147,26 @@ class WebKitWebViewPlatformController extends WebViewPlatformController {
       didStartProvisionalNavigation: (_, __, String? url) {
         weakReference.target?.callbacksHandler.onPageStarted(url ?? '');
       },
-      decidePolicyForNavigationAction: (
-        _,
-        __,
-        WKNavigationAction action,
-      ) async {
-        if (weakReference.target == null) {
-          return NavigationActionPolicy.allow;
-        }
+      decidePolicyForNavigationAction:
+          (_, __, WKNavigationAction action) async {
+            if (weakReference.target == null) {
+              return NavigationActionPolicy.allow;
+            }
 
-        if (!weakReference.target!._hasNavigationDelegate) {
-          return NavigationActionPolicy.allow;
-        }
+            if (!weakReference.target!._hasNavigationDelegate) {
+              return NavigationActionPolicy.allow;
+            }
 
-        final bool allow = await weakReference.target!.callbacksHandler
-            .onNavigationRequest(
-              url: await action.request.getUrl() ?? '',
-              isForMainFrame: action.targetFrame?.isMainFrame ?? false,
-            );
+            final bool allow = await weakReference.target!.callbacksHandler
+                .onNavigationRequest(
+                  url: await action.request.getUrl() ?? '',
+                  isForMainFrame: action.targetFrame?.isMainFrame ?? false,
+                );
 
-        return allow
-            ? NavigationActionPolicy.allow
-            : NavigationActionPolicy.cancel;
-      },
+            return allow
+                ? NavigationActionPolicy.allow
+                : NavigationActionPolicy.cancel;
+          },
       didFailNavigation: (_, __, NSError error) {
         weakReference.target?.callbacksHandler.onWebResourceError(
           _toWebResourceError(error),
@@ -222,7 +220,7 @@ class WebKitWebViewPlatformController extends WebViewPlatformController {
           NSObject object,
           Map<KeyValueChangeKey, Object?> change,
         ) {
-          final double progress = change[KeyValueChangeKey.newValue]! as double;
+          final progress = change[KeyValueChangeKey.newValue]! as double;
           weakReference.target?.onProgress((progress * 100).round());
         };
       }),
@@ -244,9 +242,11 @@ class WebKitWebViewPlatformController extends WebViewPlatformController {
 
     if (params.backgroundColor != null) {
       unawaited(webView.setOpaque(false));
-      unawaited(webView.setBackgroundColor(Colors.transparent.value));
+      unawaited(webView.setBackgroundColor(Colors.transparent.toARGB32()));
       unawaited(
-        webView.scrollView.setBackgroundColor(params.backgroundColor?.value),
+        webView.scrollView.setBackgroundColor(
+          params.backgroundColor?.toARGB32(),
+        ),
       );
     }
 
@@ -289,8 +289,8 @@ class WebKitWebViewPlatformController extends WebViewPlatformController {
 
   @override
   Future<void> clearCache() async {
-    final WKWebsiteDataStore dataStore =
-        await webView.configuration.getWebsiteDataStore();
+    final WKWebsiteDataStore dataStore = await webView.configuration
+        .getWebsiteDataStore();
     await dataStore.removeDataOfTypes(<WebsiteDataType>[
       WebsiteDataType.memoryCache,
       WebsiteDataType.diskCache,
@@ -455,15 +455,16 @@ class WebKitWebViewPlatformController extends WebViewPlatformController {
                 );
             _scriptMessageHandlers[channelName] = handler;
 
-            final String wrapperSource =
+            final wrapperSource =
                 'window.$channelName = webkit.messageHandlers.$channelName;';
-            final WKUserScript wrapperScript = WKUserScript(
+            final wrapperScript = WKUserScript(
               source: wrapperSource,
               injectionTime: UserScriptInjectionTime.atDocumentStart,
               isForMainFrameOnly: false,
             );
-            final WKUserContentController controller =
-                await webView.configuration.getUserContentController();
+            final WKUserContentController controller = await webView
+                .configuration
+                .getUserContentController();
             unawaited(controller.addUserScript(wrapperScript));
             await controller.addScriptMessageHandler(handler, channelName);
           }),
@@ -499,8 +500,9 @@ class WebKitWebViewPlatformController extends WebViewPlatformController {
   Future<void> _setJavaScriptMode(JavascriptMode mode) async {
     // Attempt to set the value that requires iOS 14+.
     try {
-      final WKWebpagePreferences webpagePreferences =
-          await webView.configuration.getDefaultWebpagePreferences();
+      final WKWebpagePreferences webpagePreferences = await webView
+          .configuration
+          .getDefaultWebpagePreferences();
       switch (mode) {
         case JavascriptMode.disabled:
           await webpagePreferences.setAllowsContentJavaScript(false);
@@ -516,8 +518,8 @@ class WebKitWebViewPlatformController extends WebViewPlatformController {
       rethrow;
     }
 
-    final WKPreferences preferences =
-        await webView.configuration.getPreferences();
+    final WKPreferences preferences = await webView.configuration
+        .getPreferences();
     switch (mode) {
       case JavascriptMode.disabled:
         await preferences.setJavaScriptEnabled(false);
@@ -546,7 +548,7 @@ class WebKitWebViewPlatformController extends WebViewPlatformController {
   }
 
   Future<void> _disableZoom() async {
-    final WKUserScript userScript = WKUserScript(
+    final userScript = WKUserScript(
       source:
           "var meta = document.createElement('meta');\n"
           "meta.name = 'viewport';\n"
@@ -556,8 +558,8 @@ class WebKitWebViewPlatformController extends WebViewPlatformController {
       injectionTime: UserScriptInjectionTime.atDocumentEnd,
       isForMainFrameOnly: true,
     );
-    final WKUserContentController controller =
-        await webView.configuration.getUserContentController();
+    final WKUserContentController controller = await webView.configuration
+        .getUserContentController();
     return controller.addUserScript(userScript);
   }
 
@@ -569,8 +571,8 @@ class WebKitWebViewPlatformController extends WebViewPlatformController {
   Future<void> _resetUserScripts({
     Set<String> removedJavaScriptChannels = const <String>{},
   }) async {
-    final WKUserContentController controller =
-        await webView.configuration.getUserContentController();
+    final WKUserContentController controller = await webView.configuration
+        .getUserContentController();
     unawaited(controller.removeAllUserScripts());
     // TODO(bparrishMines): This can be replaced with
     // `removeAllScriptMessageHandlers` once Dart supports runtime version
@@ -635,13 +637,13 @@ class WebKitWebViewPlatformController extends WebViewPlatformController {
     } else if (value is double && value.truncate() == value) {
       return value.truncate().toString();
     } else if (value is List) {
-      final List<String> stringValues = <String>[];
+      final stringValues = <String>[];
       for (final Object? listValue in value) {
         stringValues.add(_asObjectiveCString(listValue, inContainer: true));
       }
       return '(${stringValues.join(',')})';
     } else if (value is Map) {
-      final List<String> stringValues = <String>[];
+      final stringValues = <String>[];
       for (final MapEntry<Object?, Object?> entry in value.entries) {
         stringValues.add(
           '${_asObjectiveCString(entry.key, inContainer: true)} '

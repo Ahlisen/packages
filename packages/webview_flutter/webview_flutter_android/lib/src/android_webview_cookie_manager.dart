@@ -1,4 +1,4 @@
-// Copyright 2013 The Flutter Authors. All rights reserved.
+// Copyright 2013 The Flutter Authors
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -42,8 +42,8 @@ class AndroidWebViewCookieManager extends PlatformWebViewCookieManager {
          params is AndroidWebViewCookieManagerCreationParams
              ? params
              : AndroidWebViewCookieManagerCreationParams.fromPlatformWebViewCookieManagerCreationParams(
-               params,
-             ),
+                 params,
+               ),
        );
 
   final CookieManager _cookieManager;
@@ -83,11 +83,8 @@ class AndroidWebViewCookieManager extends PlatformWebViewCookieManager {
     AndroidWebViewController controller,
     bool accept,
   ) {
-    // ignore: invalid_use_of_protected_member
-    final WebView webView =
-        _cookieManager.pigeon_instanceManager.getInstanceWithWeakReference(
-          controller.webViewIdentifier,
-        )!;
+    final WebView webView = PigeonInstanceManager.instance
+        .getInstanceWithWeakReference(controller.webViewIdentifier)!;
     return _cookieManager.setAcceptThirdPartyCookies(webView, accept);
   }
 }

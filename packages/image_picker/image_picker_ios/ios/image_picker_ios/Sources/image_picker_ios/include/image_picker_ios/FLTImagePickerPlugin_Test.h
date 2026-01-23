@@ -1,11 +1,11 @@
-// Copyright 2013 The Flutter Authors. All rights reserved.
+// Copyright 2013 The Flutter Authors
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
 // This header is available in the Test module. Import via "@import image_picker_ios_ios.Test;"
 
-#import <image_picker_ios/FLTImagePickerPlugin.h>
-
+#import "FIPViewProvider.h"
+#import "FLTImagePickerPlugin.h"
 #import "messages.g.h"
 
 NS_ASSUME_NONNULL_BEGIN
@@ -62,7 +62,7 @@ typedef void (^FlutterResultAdapter)(NSArray<NSString *> *_Nullable, FlutterErro
 /// The context of the Flutter method call that is currently being handled, if any.
 @property(strong, nonatomic, nullable) FLTImagePickerMethodCallContext *callContext;
 
-- (UIViewController *)viewControllerWithWindow:(nullable UIWindow *)window;
+- (instancetype)initWithViewProvider:(NSObject<FIPViewProvider> *)viewProvider;
 
 /// Validates the provided paths list, then sends it via `callContext.result` as the result of the
 /// original platform channel method call, clearing the in-progress call state.

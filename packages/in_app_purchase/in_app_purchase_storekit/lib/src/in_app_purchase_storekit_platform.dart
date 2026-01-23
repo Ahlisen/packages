@@ -1,4 +1,4 @@
-// Copyright 2013 The Flutter Authors. All rights reserved.
+// Copyright 2013 The Flutter Authors
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -41,10 +41,9 @@ class InAppPurchaseStoreKitPlatform extends InAppPurchasePlatform {
   static late SK2TransactionObserverWrapper _sk2transactionObserver;
 
   @override
-  Stream<List<PurchaseDetails>> get purchaseStream =>
-      _useStoreKit2
-          ? _sk2transactionObserver.transactionsCreatedController.stream
-          : _sk1transactionObserver.purchaseUpdatedController.stream;
+  Stream<List<PurchaseDetails>> get purchaseStream => _useStoreKit2
+      ? _sk2transactionObserver.transactionsCreatedController.stream
+      : _sk1transactionObserver.purchaseUpdatedController.stream;
 
   /// Callback handler for transaction status changes.
   @visibleForTesting
@@ -69,7 +68,7 @@ class InAppPurchaseStoreKitPlatform extends InAppPurchasePlatform {
     _skPaymentQueueWrapper = SKPaymentQueueWrapper();
 
     if (_useStoreKit2) {
-      final StreamController<List<PurchaseDetails>> updateController2 =
+      final updateController2 =
           StreamController<List<PurchaseDetails>>.broadcast(
             onListen: () => SK2Transaction.startListeningToTransactions(),
             onCancel: () => SK2Transaction.stopListeningToTransactions(),
@@ -81,11 +80,13 @@ class InAppPurchaseStoreKitPlatform extends InAppPurchasePlatform {
     } else {
       // Create a purchaseUpdatedController and notify the native side when to
       // start of stop sending updates.
-      final StreamController<List<PurchaseDetails>>
-      updateController = StreamController<List<PurchaseDetails>>.broadcast(
-        onListen: () => _skPaymentQueueWrapper.startObservingTransactionQueue(),
-        onCancel: () => _skPaymentQueueWrapper.stopObservingTransactionQueue(),
-      );
+      final updateController =
+          StreamController<List<PurchaseDetails>>.broadcast(
+            onListen: () =>
+                _skPaymentQueueWrapper.startObservingTransactionQueue(),
+            onCancel: () =>
+                _skPaymentQueueWrapper.stopObservingTransactionQueue(),
+          );
       _sk1transactionObserver = _TransactionObserver(updateController);
       _skPaymentQueueWrapper.setTransactionObserver(observer);
     }
@@ -170,10 +171,9 @@ class InAppPurchaseStoreKitPlatform extends InAppPurchasePlatform {
         );
       } else {
         options = SK2ProductPurchaseOptions(
-          quantity:
-              purchaseParam is AppStorePurchaseParam
-                  ? purchaseParam.quantity
-                  : 1,
+          quantity: purchaseParam is AppStorePurchaseParam
+              ? purchaseParam.quantity
+              : 1,
           appAccountToken: purchaseParam.applicationUserName,
         );
       }
@@ -188,16 +188,16 @@ class InAppPurchaseStoreKitPlatform extends InAppPurchasePlatform {
     await _skPaymentQueueWrapper.addPayment(
       SKPaymentWrapper(
         productIdentifier: purchaseParam.productDetails.id,
-        quantity:
-            purchaseParam is AppStorePurchaseParam ? purchaseParam.quantity : 1,
+        quantity: purchaseParam is AppStorePurchaseParam
+            ? purchaseParam.quantity
+            : 1,
         applicationUsername: purchaseParam.applicationUserName,
         simulatesAskToBuyInSandbox:
             purchaseParam is AppStorePurchaseParam &&
             purchaseParam.simulatesAskToBuyInSandbox,
-        paymentDiscount:
-            purchaseParam is AppStorePurchaseParam
-                ? purchaseParam.discount
-                : null,
+        paymentDiscount: purchaseParam is AppStorePurchaseParam
+            ? purchaseParam.discount
+            : null,
       ),
     );
 
@@ -272,7 +272,7 @@ class InAppPurchaseStoreKitPlatform extends InAppPurchasePlatform {
     Set<String> identifiers,
   ) async {
     if (_useStoreKit2) {
-      List<SK2Product> products = <SK2Product>[];
+      var products = <SK2Product>[];
       Set<String> invalidProductIdentifiers;
       PlatformException? exception;
       try {
@@ -287,29 +287,27 @@ class InAppPurchaseStoreKitPlatform extends InAppPurchasePlatform {
         invalidProductIdentifiers = identifiers;
       }
       List<AppStoreProduct2Details> productDetails;
-      productDetails =
-          products
-              .map(
-                (SK2Product productWrapper) =>
-                    AppStoreProduct2Details.fromSK2Product(productWrapper),
-              )
-              .toList();
-      final ProductDetailsResponse response = ProductDetailsResponse(
+      productDetails = products
+          .map(
+            (SK2Product productWrapper) =>
+                AppStoreProduct2Details.fromSK2Product(productWrapper),
+          )
+          .toList();
+      final response = ProductDetailsResponse(
         productDetails: productDetails,
         notFoundIDs: invalidProductIdentifiers.toList(),
-        error:
-            exception == null
-                ? null
-                : IAPError(
-                  source: kIAPSource,
-                  code: exception.code,
-                  message: exception.message ?? '',
-                  details: exception.details,
-                ),
+        error: exception == null
+            ? null
+            : IAPError(
+                source: kIAPSource,
+                code: exception.code,
+                message: exception.message ?? '',
+                details: exception.details,
+              ),
       );
       return response;
     }
-    final SKRequestMaker requestMaker = SKRequestMaker();
+    final requestMaker = SKRequestMaker();
     SkProductResponseWrapper response;
     PlatformException? exception;
     try {
@@ -321,32 +319,29 @@ class InAppPurchaseStoreKitPlatform extends InAppPurchasePlatform {
         invalidProductIdentifiers: identifiers.toList(),
       );
     }
-    List<AppStoreProductDetails> productDetails = <AppStoreProductDetails>[];
-    productDetails =
-        response.products
-            .map(
-              (SKProductWrapper productWrapper) =>
-                  AppStoreProductDetails.fromSKProduct(productWrapper),
-            )
-            .toList();
+    var productDetails = <AppStoreProductDetails>[];
+    productDetails = response.products
+        .map(
+          (SKProductWrapper productWrapper) =>
+              AppStoreProductDetails.fromSKProduct(productWrapper),
+        )
+        .toList();
     List<String> invalidIdentifiers = response.invalidProductIdentifiers;
     if (productDetails.isEmpty) {
       invalidIdentifiers = identifiers.toList();
     }
-    final ProductDetailsResponse productDetailsResponse =
-        ProductDetailsResponse(
-          productDetails: productDetails,
-          notFoundIDs: invalidIdentifiers,
-          error:
-              exception == null
-                  ? null
-                  : IAPError(
-                    source: kIAPSource,
-                    code: exception.code,
-                    message: exception.message ?? '',
-                    details: exception.details,
-                  ),
-        );
+    final productDetailsResponse = ProductDetailsResponse(
+      productDetails: productDetails,
+      notFoundIDs: invalidIdentifiers,
+      error: exception == null
+          ? null
+          : IAPError(
+              source: kIAPSource,
+              code: exception.code,
+              message: exception.message ?? '',
+              details: exception.details,
+            ),
+    );
     return productDetailsResponse;
   }
 
@@ -529,16 +524,15 @@ class _TransactionObserver implements SKTransactionObserverWrapper {
     }
 
     final String receiptData = await getReceiptData();
-    final List<PurchaseDetails> purchases =
-        transactions
-            .map(
-              (SKPaymentTransactionWrapper transaction) =>
-                  AppStorePurchaseDetails.fromSKTransaction(
-                    transaction,
-                    receiptData,
-                  ),
-            )
-            .toList();
+    final List<PurchaseDetails> purchases = transactions
+        .map(
+          (SKPaymentTransactionWrapper transaction) =>
+              AppStorePurchaseDetails.fromSKTransaction(
+                transaction,
+                receiptData,
+              ),
+        )
+        .toList();
 
     purchaseUpdatedController.add(purchases);
   }

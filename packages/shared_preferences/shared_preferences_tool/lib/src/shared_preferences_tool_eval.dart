@@ -1,4 +1,4 @@
-// Copyright 2013 The Flutter Authors. All rights reserved.
+// Copyright 2013 The Flutter Authors
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -6,6 +6,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:devtools_app_shared/service.dart';
+import 'package:devtools_app_shared/utils.dart';
 import 'package:vm_service/vm_service.dart';
 
 import 'shared_preferences_state.dart';
@@ -58,8 +59,7 @@ class SharedPreferencesToolEval {
     required String eventKind,
     Disposable? isAlive,
   }) async {
-    final Completer<Map<String, Object?>> completer =
-        Completer<Map<String, Object?>>();
+    final completer = Completer<Map<String, Object?>>();
 
     late final StreamSubscription<Event> streamSubscription;
     streamSubscription = _service.onExtensionEvent.listen((Event event) {

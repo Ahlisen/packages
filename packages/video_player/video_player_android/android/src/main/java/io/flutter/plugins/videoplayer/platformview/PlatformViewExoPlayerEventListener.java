@@ -1,4 +1,4 @@
-// Copyright 2013 The Flutter Authors. All rights reserved.
+// Copyright 2013 The Flutter Authors
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -7,6 +7,7 @@ package io.flutter.plugins.videoplayer.platformview;
 import androidx.annotation.NonNull;
 import androidx.annotation.OptIn;
 import androidx.media3.common.Format;
+import androidx.media3.common.VideoSize;
 import androidx.media3.common.util.UnstableApi;
 import androidx.media3.exoplayer.ExoPlayer;
 import io.flutter.plugins.videoplayer.ExoPlayerEventListener;
@@ -21,7 +22,7 @@ public final class PlatformViewExoPlayerEventListener extends ExoPlayerEventList
 
   @OptIn(markerClass = UnstableApi.class)
   @Override
-  protected void sendInitialized(@NonNull String eventName) {
+  protected void sendInitialized() {
     // We can't rely on VideoSize here, because at this point it is not available - the platform
     // view was not created yet. We use the video format instead.
     Format videoFormat = exoPlayer.getVideoFormat();
@@ -40,12 +41,14 @@ public final class PlatformViewExoPlayerEventListener extends ExoPlayerEventList
       rotationCorrection = RotationDegrees.fromDegrees(0);
     }
 
-    events.onInitialized(
-      width,
-      height,
-      exoPlayer.getDuration(),
-      rotationCorrection.getDegrees(),
-      eventName
-    );
+    events.onInitialized(width, height, exoPlayer.getDuration(), rotationCorrection.getDegrees());
+  }
+
+  @Override
+  protected void sendReloadingEnd() {
+    VideoSize videoSize = exoPlayer.getVideoSize();
+    int width = videoSize.width;
+    int height = videoSize.height;
+    events.onReloadingEnd(width, height, exoPlayer.getDuration());
   }
 }
