@@ -457,7 +457,7 @@ class _BumbleBeeRemoteVideoState extends State<_BumbleBeeRemoteVideo> {
   Widget build(BuildContext context) {
     return SingleChildScrollView(
       child: Column(
-        children: <Widget>[
+        children: [
           SizedBox(
             height: 400,
             child: AspectRatio(
@@ -557,6 +557,7 @@ class _BumbleBeeRemoteVideoState extends State<_BumbleBeeRemoteVideo> {
             },
             child: const Text('Create new player for bee'),
           ),
+          const SizedBox(height: 40),
         ],
       ),
     );
