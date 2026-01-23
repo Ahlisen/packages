@@ -15,7 +15,12 @@
 }
 
 - (void)setPlayer:(AVPlayer *)player {
-  [(AVPlayerLayer *)[self layer] setPlayer:player];
+  AVPlayerLayer *playerLayer = (AVPlayerLayer *)[self layer];
+  [playerLayer setPlayer:player];
+
+  if (@available(iOS 16.0, *)) {
+    self.layer.wantsExtendedDynamicRangeContent = YES;
+  }
 }
 @end
 
