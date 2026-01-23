@@ -636,24 +636,14 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
   }
 
   Future<void> stop() async {
-    if (_isDisposedOrNotInitialized) {
+    if (_isDisposedOrNotInitialized && _playerId == kUninitializedPlayerId) {
       return;
     }
-    if (_creatingCompleter?.isCompleted == false) {
-      _creatingCompleter?.completeError(
-        PlatformException(
-          code: 'video_player_stopped',
-          message: 'Video player has been stopped.',
-        ),
-      );
+    if (_creatingCompleter != null  && !_creatingCompleter!.isCompleted) {
+      await _creatingCompleter!.future;
     }
-    if (_newAssetCompleter?.isCompleted == false) {
-      _newAssetCompleter?.completeError(
-        PlatformException(
-          code: 'video_player_stopped',
-          message: 'Video player has been stopped.',
-        ),
-      );
+    if (_newAssetCompleter != null && !_newAssetCompleter!.isCompleted) {
+      await _newAssetCompleter!.future;
     }
     _timer?.cancel();
     await _videoPlayerPlatform.stop(_playerId);
@@ -969,6 +959,7 @@ class VideoPlayer extends StatefulWidget {
 
 class _VideoPlayerState extends State<VideoPlayer> {
   late int _playerId;
+
   void _controllerDidUpdateValue() {
     final int newPlayerId = widget.controller.playerId;
     if (newPlayerId != _playerId) {
