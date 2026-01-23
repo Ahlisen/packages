@@ -53,6 +53,7 @@ class VideoPlayerValue {
     this.buffered = const <DurationRange>[],
     this.isInitialized = false,
     this.isPlaying = false,
+    this.isStopped = false,
     this.isLooping = false,
     this.isBuffering = false,
     this.isReadyToDisplay = false,
@@ -103,6 +104,9 @@ class VideoPlayerValue {
 
   /// True if the video is playing. False if it's paused.
   final bool isPlaying;
+
+  /// True if the video is stopped and needs to be re-initialized/loaded.
+  final bool isStopped;
 
   /// True if the video is looping.
   final bool isLooping;
@@ -171,6 +175,7 @@ class VideoPlayerValue {
     List<DurationRange>? buffered,
     bool? isInitialized,
     bool? isPlaying,
+    bool? isStopped,
     bool? isLooping,
     bool? isBuffering,
     bool? isReadyToDisplay,
@@ -190,6 +195,7 @@ class VideoPlayerValue {
       isInitialized: isInitialized ?? this.isInitialized,
       isReadyToDisplay: isReadyToDisplay ?? this.isReadyToDisplay,
       isPlaying: isPlaying ?? this.isPlaying,
+      isStopped: isStopped ?? this.isStopped,
       isLooping: isLooping ?? this.isLooping,
       isBuffering: isBuffering ?? this.isBuffering,
       volume: volume ?? this.volume,
@@ -214,6 +220,7 @@ class VideoPlayerValue {
         'isInitialized: $isInitialized, '
         'isReadyToDisplay: $isReadyToDisplay, '
         'isPlaying: $isPlaying, '
+        'isStopped: $isStopped, '
         'isLooping: $isLooping, '
         'isBuffering: $isBuffering, '
         'volume: $volume, '
@@ -233,6 +240,7 @@ class VideoPlayerValue {
           captionOffset == other.captionOffset &&
           listEquals(buffered, other.buffered) &&
           isPlaying == other.isPlaying &&
+          isStopped == other.isStopped &&
           isLooping == other.isLooping &&
           isBuffering == other.isBuffering &&
           volume == other.volume &&
@@ -252,6 +260,7 @@ class VideoPlayerValue {
     captionOffset,
     buffered,
     isPlaying,
+    isStopped,
     isLooping,
     isBuffering,
     volume,
@@ -636,6 +645,9 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
   }
 
   Future<void> stop() async {
+    if (value.isStopped) {
+      return;
+    }
     if (_isDisposedOrNotInitialized && _playerId == kUninitializedPlayerId) {
       return;
     }
@@ -649,6 +661,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
     await _videoPlayerPlatform.stop(_playerId);
     value = value.copyWith(
       isPlaying: false,
+      isStopped: true,
       position: Duration.zero,
       buffered: [],
       isBuffering: false,
@@ -694,6 +707,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
     value = value.copyWith(
       isReadyToDisplay: false,
       isPlaying: false,
+      isStopped: false,
       position: Duration.zero,
     );
 
@@ -709,7 +723,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
   }
 
   Future<void> _applyPlayPause() async {
-    if (_isDisposedOrNotInitialized) {
+    if (_isDisposedOrNotInitializedOrStopped) {
       return;
     }
     if (value.isPlaying) {
@@ -747,7 +761,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
   }
 
   Future<void> _applyPlaybackSpeed() async {
-    if (_isDisposedOrNotInitialized) {
+    if (_isDisposedOrNotInitializedOrStopped) {
       return;
     }
 
@@ -775,7 +789,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
   /// If [moment] is outside of the video's full range it will be automatically
   /// and silently clamped.
   Future<void> seekTo(Duration position) async {
-    if (_isDisposedOrNotInitialized) {
+    if (_isDisposedOrNotInitializedOrStopped) {
       return;
     }
     if (position > value.duration) {
@@ -915,6 +929,9 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
   }
 
   bool get _isDisposedOrNotInitialized => _isDisposed || !value.isInitialized;
+
+  bool get _isDisposedOrNotInitializedOrStopped =>
+      _isDisposed|| !value.isInitialized || value.isStopped;
 }
 
 class _VideoAppLifeCycleObserver extends Object with WidgetsBindingObserver {
