@@ -96,10 +96,14 @@ public abstract class VideoPlayer implements VideoPlayerInstanceApi {
   }
 
   public void loadAsset(@NonNull VideoAsset asset) {
+    exoPlayerEventListener.onReloadingStart();
+    exoPlayer.clearVideoSurface();
     MediaItem mediaItem = asset.getMediaItem();
     exoPlayer.setMediaItem(mediaItem);
     exoPlayer.prepare();
-    exoPlayerEventListener.onReloadingStart();
+    if (surfaceProducer != null) {
+      exoPlayer.setVideoSurface(surfaceProducer.getSurface());
+    }
   }
 
   @Override
