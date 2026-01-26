@@ -627,8 +627,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
     if (value.position == value.duration) {
       await seekTo(Duration.zero);
     }
-    value = value.copyWith(isPlaying: true);
-    await _applyPlayPause();
+    await _applyPlayPause(isPlaying: true);
   }
 
   /// Sets whether or not the video should loop after playing once. See also
@@ -640,8 +639,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
 
   /// Pauses the video.
   Future<void> pause() async {
-    value = value.copyWith(isPlaying: false);
-    await _applyPlayPause();
+    await _applyPlayPause(isPlaying: false);
   }
 
   Future<void> stop() async {
@@ -722,9 +720,12 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
     await _videoPlayerPlatform.setLooping(_playerId, value.isLooping);
   }
 
-  Future<void> _applyPlayPause() async {
+  Future<void> _applyPlayPause({bool? isPlaying}) async {
     if (_isDisposedOrNotInitializedOrStopped) {
       return;
+    }
+    if (isPlaying != null) {
+      value = value.copyWith(isPlaying: isPlaying);
     }
     if (value.isPlaying) {
       await _videoPlayerPlatform.play(_playerId);
