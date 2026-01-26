@@ -1218,6 +1218,32 @@ class VideoPlayerInstanceApi {
     }
   }
 
+  /// Stops playback.
+  /// Release the loaded media and resources required for playback.
+  /// The player instance can still be used by calling initialize/load again,
+  /// and dispose must still be called on the player if it's no longer required.
+  Future<void> stop() async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.video_player_android.VideoPlayerInstanceApi.stop$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(null);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+    if (pigeonVar_replyList == null) {
+      throw _createConnectionError(pigeonVar_channelName);
+    } else if (pigeonVar_replyList.length > 1) {
+      throw PlatformException(
+        code: pigeonVar_replyList[0]! as String,
+        message: pigeonVar_replyList[1] as String?,
+        details: pigeonVar_replyList[2],
+      );
+    } else {
+      return;
+    }
+  }
+
   /// Seeks to the given playback position, in milliseconds.
   Future<void> seekTo(int position) async {
     final pigeonVar_channelName = 'dev.flutter.pigeon.video_player_android.VideoPlayerInstanceApi.seekTo$pigeonVar_messageChannelSuffix';

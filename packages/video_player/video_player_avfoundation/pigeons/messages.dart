@@ -82,5 +82,6 @@ abstract class VideoPlayerInstanceApi {
   @ObjCSelector('seekTo:')
   void seekTo(int position);
   void pause();
+  void stop();
   void dispose();
 }

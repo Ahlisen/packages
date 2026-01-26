@@ -176,6 +176,11 @@ class AVFoundationVideoPlayer extends VideoPlayerPlatform {
   }
 
   @override
+  Future<void> stop(int playerId) {
+    return _playerWith(id: playerId).stop();
+  }
+
+  @override
   Future<void> setVolume(int playerId, double volume) {
     return _playerWith(id: playerId).setVolume(volume);
   }
@@ -263,6 +268,8 @@ class _PlayerInstance {
   Future<void> play() => _api.play();
 
   Future<void> pause() => _api.pause();
+
+  Future<void> stop() => _api.stop();
 
   Future<void> setLooping(bool looping) => _api.setLooping(looping);
 

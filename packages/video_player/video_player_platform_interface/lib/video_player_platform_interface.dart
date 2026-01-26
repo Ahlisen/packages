@@ -85,6 +85,10 @@ abstract class VideoPlayerPlatform extends PlatformInterface {
     throw UnimplementedError('pause() has not been implemented.');
   }
 
+  Future<void> stop(int playerId) {
+    throw UnimplementedError('stop() has not been implemented.');
+  }
+
   /// Sets the volume to a range between 0.0 and 1.0.
   Future<void> setVolume(int playerId, double volume) {
     throw UnimplementedError('setVolume() has not been implemented.');

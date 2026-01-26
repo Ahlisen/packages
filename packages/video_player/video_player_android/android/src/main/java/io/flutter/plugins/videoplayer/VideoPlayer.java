@@ -79,6 +79,13 @@ public abstract class VideoPlayer implements VideoPlayerInstanceApi {
     exoPlayerEventListener = createExoPlayerEventListener(exoPlayer, surfaceProducer);
     exoPlayer.addListener(exoPlayerEventListener);
     setAudioAttributes(exoPlayer, options.mixWithOthers);
+
+    if (surfaceProducer != null) {
+      exoPlayerEventListener.setOnLoopCallback(() -> {
+        exoPlayer.clearVideoSurface();
+        exoPlayer.setVideoSurface(surfaceProducer.getSurface());
+      });
+    }
   }
 
   public void setDisposeHandler(@Nullable DisposeHandler handler) {
@@ -96,10 +103,14 @@ public abstract class VideoPlayer implements VideoPlayerInstanceApi {
   }
 
   public void loadAsset(@NonNull VideoAsset asset) {
+    exoPlayerEventListener.onReloadingStart();
+    exoPlayer.clearVideoSurface();
     MediaItem mediaItem = asset.getMediaItem();
     exoPlayer.setMediaItem(mediaItem);
     exoPlayer.prepare();
-    exoPlayerEventListener.onReloadingStart();
+    if (surfaceProducer != null) {
+      exoPlayer.setVideoSurface(surfaceProducer.getSurface());
+    }
   }
 
   @Override
@@ -110,6 +121,11 @@ public abstract class VideoPlayer implements VideoPlayerInstanceApi {
   @Override
   public void pause() {
     exoPlayer.pause();
+  }
+
+  @Override
+  public void stop() {
+    exoPlayer.stop();
   }
 
   @Override

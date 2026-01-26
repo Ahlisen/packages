@@ -87,6 +87,7 @@ extern void SetUpFVPAVFoundationVideoPlayerApiWithSuffix(id<FlutterBinaryMesseng
 - (nullable NSNumber *)position:(FlutterError *_Nullable *_Nonnull)error;
 - (void)seekTo:(NSInteger)position completion:(void (^)(FlutterError *_Nullable))completion;
 - (void)pauseWithError:(FlutterError *_Nullable *_Nonnull)error;
+- (void)stopWithError:(FlutterError *_Nullable *_Nonnull)error;
 - (void)disposeWithError:(FlutterError *_Nullable *_Nonnull)error;
 @end
 
