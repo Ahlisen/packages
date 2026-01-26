@@ -425,6 +425,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
   Timer? _timer;
   bool _isDisposed = false;
   Completer<void>? _creatingCompleter;
+  Completer<void>? _initializingCompleter;
   Completer<void>? _newAssetCompleter;
   StreamSubscription<dynamic>? _eventSubscription;
   _VideoAppLifeCycleObserver? _lifeCycleObserver;
@@ -497,6 +498,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
         kUninitializedPlayerId;
     _creatingCompleter!.complete(null);
     final initializingCompleter = Completer<void>();
+    _initializingCompleter = initializingCompleter;
 
     // Apply the web-specific options
     if (kIsWeb && videoPlayerOptions?.webOptions != null) {
@@ -643,17 +645,20 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
   }
 
   Future<void> stop() async {
-    if (value.isStopped) {
+    if (_isDisposed || value.isStopped) {
       return;
     }
-    if (_isDisposedOrNotInitialized && _playerId == kUninitializedPlayerId) {
-      return;
-    }
-    if (_creatingCompleter != null  && !_creatingCompleter!.isCompleted) {
+    if (_creatingCompleter != null) {
       await _creatingCompleter!.future;
     }
-    if (_newAssetCompleter != null && !_newAssetCompleter!.isCompleted) {
+    if (_initializingCompleter != null) {
+      await _initializingCompleter!.future;
+    }
+    if (_newAssetCompleter != null) {
       await _newAssetCompleter!.future;
+    }
+    if (!value.isInitialized) {
+      return;
     }
     _timer?.cancel();
     await _videoPlayerPlatform.stop(_playerId);
