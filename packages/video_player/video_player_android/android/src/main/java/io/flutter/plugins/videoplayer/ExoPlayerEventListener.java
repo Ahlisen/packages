@@ -10,6 +10,7 @@ import androidx.annotation.Nullable;
 import androidx.media3.common.C;
 import androidx.media3.common.PlaybackException;
 import androidx.media3.common.Player;
+import androidx.media3.common.Player.PositionInfo;
 import androidx.media3.common.Tracks;
 import androidx.media3.exoplayer.ExoPlayer;
 
@@ -19,6 +20,7 @@ public abstract class ExoPlayerEventListener implements Player.Listener {
   private CountDownTimer timeoutCountdown;
   protected final ExoPlayer exoPlayer;
   protected final VideoPlayerCallbacks events;
+  @Nullable private Runnable onLoopCallback;
 
   protected enum RotationDegrees {
     ROTATE_0(0),
@@ -50,6 +52,10 @@ public abstract class ExoPlayerEventListener implements Player.Listener {
       @NonNull ExoPlayer exoPlayer, @NonNull VideoPlayerCallbacks events) {
     this.exoPlayer = exoPlayer;
     this.events = events;
+  }
+
+  public void setOnLoopCallback(@Nullable Runnable callback) {
+    this.onLoopCallback = callback;
   }
 
   protected abstract void sendInitialized();
@@ -101,6 +107,16 @@ public abstract class ExoPlayerEventListener implements Player.Listener {
   @Override
   public void onIsPlayingChanged(boolean isPlaying) {
     events.onIsPlayingStateUpdate(isPlaying);
+  }
+
+  @Override
+  public void onPositionDiscontinuity(
+      @NonNull PositionInfo oldPosition,
+      @NonNull PositionInfo newPosition,
+      int reason) {
+    if (reason == Player.DISCONTINUITY_REASON_AUTO_TRANSITION && onLoopCallback != null) {
+      onLoopCallback.run();
+    }
   }
 
   @Override

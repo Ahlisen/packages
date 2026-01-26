@@ -79,6 +79,13 @@ public abstract class VideoPlayer implements VideoPlayerInstanceApi {
     exoPlayerEventListener = createExoPlayerEventListener(exoPlayer, surfaceProducer);
     exoPlayer.addListener(exoPlayerEventListener);
     setAudioAttributes(exoPlayer, options.mixWithOthers);
+
+    if (surfaceProducer != null) {
+      exoPlayerEventListener.setOnLoopCallback(() -> {
+        exoPlayer.clearVideoSurface();
+        exoPlayer.setVideoSurface(surfaceProducer.getSurface());
+      });
+    }
   }
 
   public void setDisposeHandler(@Nullable DisposeHandler handler) {

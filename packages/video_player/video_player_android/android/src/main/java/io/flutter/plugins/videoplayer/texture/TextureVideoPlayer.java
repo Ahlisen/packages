@@ -58,21 +58,10 @@ public final class TextureVideoPlayer extends VideoPlayer implements SurfaceProd
         () -> {
           androidx.media3.exoplayer.trackselection.DefaultTrackSelector trackSelector =
               new androidx.media3.exoplayer.trackselection.DefaultTrackSelector(context);
-          // Custom load control for quicker buffering
-          DefaultLoadControl loadControl = new DefaultLoadControl
-              .Builder()
-              .setBufferDurationsMs(
-                /* minBufferMs= */ 2_500,
-                /* maxBufferMs= */ 15_000,
-                /* bufferForPlaybackMs= */ 500,
-                /* bufferForPlaybackAfterRebufferMs= */ 1_000
-              )
-              .build();
           ExoPlayer.Builder builder =
               new ExoPlayer.Builder(context)
                   .setTrackSelector(trackSelector)
-                  .setMediaSourceFactory(asset.getMediaSourceFactory(context))
-                  .setLoadControl(loadControl);
+                  .setMediaSourceFactory(asset.getMediaSourceFactory(context));
           return builder.build();
         });
   }
