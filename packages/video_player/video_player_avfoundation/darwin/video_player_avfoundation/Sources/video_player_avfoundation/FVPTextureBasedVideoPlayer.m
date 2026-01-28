@@ -6,6 +6,7 @@
 #import "./include/video_player_avfoundation/FVPTextureBasedVideoPlayer_Test.h"
 
 #define MAXIMUM_FRAME_WAIT_IN_SECONDS 0.2
+#define MAXIMUM_ASSET_LOAD_WAIT_IN_SECONDS 1.0
 
 
 @interface FVPTextureBasedVideoPlayer ()
@@ -31,12 +32,11 @@
 // (e.g., after a seek while paused). If YES, the display link should continue to run until the next
 // frame is successfully provided.
 @property(nonatomic, assign) BOOL waitingForFrame;
-// Whether waiting for the first frame of a newly loaded asset. Unlike waitingForFrame,
-// this doesn't have a short timeout since loading can take longer than seeks.
-@property(nonatomic, assign) BOOL waitingForNewAssetFrame;
 
 /// Ensures that the frame updater runs until a frame is rendered, regardless of play/pause state.
 - (void)expectFrame;
+/// Ensures that the frame updater runs until a frame is rendered, with a custom timeout.
+- (void)expectFrameWithTimeout:(NSTimeInterval)timeout;
 @end
 
 @implementation FVPTextureBasedVideoPlayer
@@ -83,21 +83,24 @@
 }
 
 - (void)expectFrame {
+  [self expectFrameWithTimeout:MAXIMUM_FRAME_WAIT_IN_SECONDS];
+}
+
+- (void)expectFrameWithTimeout:(NSTimeInterval)timeout {
   self.waitingForFrame = YES;
 
   _displayLink.running = YES;
-    
-    // Timeout for displaying the first frame. As long as textureFrameAvailable has been called before this timeout,
-    // the engine will correctly trigger copyPixelBuffer when the FlutterTexture is instantiated.
-    dispatch_time_t maxWaitTime = dispatch_time(DISPATCH_TIME_NOW, (int64_t)(MAXIMUM_FRAME_WAIT_IN_SECONDS * NSEC_PER_SEC));
-    __weak FVPTextureBasedVideoPlayer *weakSelf = self;
-    dispatch_after(maxWaitTime, dispatch_get_main_queue(), ^(void){
-        if (!weakSelf.isPlaying) {
-            weakSelf.displayLink.running = NO;
-            weakSelf.waitingForFrame = NO;
-        }
-    });
-    
+
+  // Timeout for displaying the first frame. As long as textureFrameAvailable has been called before this timeout,
+  // the engine will correctly trigger copyPixelBuffer when the FlutterTexture is instantiated.
+  dispatch_time_t maxWaitTime = dispatch_time(DISPATCH_TIME_NOW, (int64_t)(timeout * NSEC_PER_SEC));
+  __weak FVPTextureBasedVideoPlayer *weakSelf = self;
+  dispatch_after(maxWaitTime, dispatch_get_main_queue(), ^(void){
+    if (!weakSelf.isPlaying) {
+      weakSelf.displayLink.running = NO;
+      weakSelf.waitingForFrame = NO;
+    }
+  });
 }
 
 #pragma mark - Overrides
@@ -107,7 +110,7 @@
 
   // If the texture is still waiting for an expected frame, the display link needs to keep
   // running until it arrives regardless of the play/pause state.
-  _displayLink.running = self.isPlaying || self.waitingForFrame || self.waitingForNewAssetFrame;
+  _displayLink.running = self.isPlaying || self.waitingForFrame;
 }
 
 - (void)loadAsset:(NSURL *)url httpHeaders:(NSDictionary<NSString *,NSString *> *)httpHeaders {
@@ -142,12 +145,11 @@
     // Reset timing state to avoid drift issues with the new video
     self.targetTime = 0;
 
-    // Keep the display link running until we receive the first frame of the new video.
-    // Unlike waitingForFrame (used for seeks and first init), this doesn't have a short timeout since
-    // loading a new asset can take longer.
-    self.waitingForNewAssetFrame = YES;
-
     [super loadAsset:url httpHeaders:httpHeaders];
+    
+    // Keep the display link running until we receive the first frame of the new video.
+    // Use a longer timeout (1 second) since loading a new asset can take longer than seeks.
+    [self expectFrameWithTimeout:MAXIMUM_ASSET_LOAD_WAIT_IN_SECONDS];
 }
 
 - (void)seekTo:(NSInteger)position completion:(void (^)(FlutterError *_Nullable))completion {
@@ -214,12 +216,9 @@
     if (self.waitingForFrame) {
       self.waitingForFrame = NO;
     }
-    if (self.waitingForNewAssetFrame) {
-      self.waitingForNewAssetFrame = NO;
-    }
     // If the display link was only running temporarily to pick up a new frame while the video was
     // paused, stop it again.
-    if (!self.isPlaying && !self.waitingForFrame && !self.waitingForNewAssetFrame) {
+    if (!self.isPlaying && !self.waitingForFrame) {
       self.displayLink.running = NO;
     }
   }
