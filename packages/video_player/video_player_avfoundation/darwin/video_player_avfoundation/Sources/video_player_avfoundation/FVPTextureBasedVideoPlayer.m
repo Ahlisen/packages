@@ -32,6 +32,9 @@
 // (e.g., after a seek while paused). If YES, the display link should continue to run until the next
 // frame is successfully provided.
 @property(nonatomic, assign) BOOL waitingForFrame;
+// Generation counter for frame expectations. Incremented each time expectFrameWithTimeout: is called,
+// allowing previous timeouts to be invalidated when a new frame expectation starts.
+@property(nonatomic, assign) NSUInteger frameExpectationGeneration;
 
 /// Ensures that the frame updater runs until a frame is rendered, regardless of play/pause state.
 - (void)expectFrame;
@@ -88,14 +91,21 @@
 
 - (void)expectFrameWithTimeout:(NSTimeInterval)timeout {
   self.waitingForFrame = YES;
-
   _displayLink.running = YES;
+
+  // Increment the generation to invalidate any previous timeouts.
+  self.frameExpectationGeneration++;
+  NSUInteger currentGeneration = self.frameExpectationGeneration;
 
   // Timeout for displaying the first frame. As long as textureFrameAvailable has been called before this timeout,
   // the engine will correctly trigger copyPixelBuffer when the FlutterTexture is instantiated.
   dispatch_time_t maxWaitTime = dispatch_time(DISPATCH_TIME_NOW, (int64_t)(timeout * NSEC_PER_SEC));
   __weak FVPTextureBasedVideoPlayer *weakSelf = self;
   dispatch_after(maxWaitTime, dispatch_get_main_queue(), ^(void){
+    // Only act on this timeout if no newer frame expectation has been started.
+    if (weakSelf.frameExpectationGeneration != currentGeneration) {
+      return;
+    }
     if (!weakSelf.isPlaying) {
       weakSelf.displayLink.running = NO;
       weakSelf.waitingForFrame = NO;
