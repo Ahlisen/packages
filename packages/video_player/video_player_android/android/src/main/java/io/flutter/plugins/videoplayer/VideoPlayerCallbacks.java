@@ -21,7 +21,7 @@ public interface VideoPlayerCallbacks {
 
   void onReloadingStart();
 
-  void onReloadingEnd(int width, int height, long durationInMs);
+  void onReloadingEnd(int width, int height, long durationInMs, @Nullable Long textureId);
 
   void onPlaybackStateChanged(@NonNull PlatformPlaybackState state);
 

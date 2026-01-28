@@ -313,7 +313,9 @@ data class ReloadingEndEvent (
   /** The width of the video in pixels. */
   val width: Long,
   /** The height of the video in pixels. */
-  val height: Long
+  val height: Long,
+  /** The new texture ID if the texture was recreated (TextureVideoPlayer only). */
+  val textureId: Long? = null
 ) : PlatformVideoEvent()
  {
   companion object {
@@ -321,7 +323,8 @@ data class ReloadingEndEvent (
       val duration = pigeonVar_list[0] as Long
       val width = pigeonVar_list[1] as Long
       val height = pigeonVar_list[2] as Long
-      return ReloadingEndEvent(duration, width, height)
+      val textureId = pigeonVar_list[3] as Long?
+      return ReloadingEndEvent(duration, width, height, textureId)
     }
   }
   fun toList(): List<Any?> {
@@ -329,6 +332,7 @@ data class ReloadingEndEvent (
       duration,
       width,
       height,
+      textureId,
     )
   }
   override fun equals(other: Any?): Boolean {

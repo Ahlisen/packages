@@ -297,6 +297,7 @@ class ReloadingEndEvent extends PlatformVideoEvent {
     required this.duration,
     required this.width,
     required this.height,
+    this.textureId,
   });
 
   /// The video duration in milliseconds.
@@ -308,11 +309,15 @@ class ReloadingEndEvent extends PlatformVideoEvent {
   /// The height of the video in pixels.
   int height;
 
+  /// The new texture ID if the texture was recreated (TextureVideoPlayer only).
+  int? textureId;
+
   List<Object?> _toList() {
     return <Object?>[
       duration,
       width,
       height,
+      textureId,
     ];
   }
 
@@ -325,6 +330,7 @@ class ReloadingEndEvent extends PlatformVideoEvent {
       duration: result[0]! as int,
       width: result[1]! as int,
       height: result[2]! as int,
+      textureId: result[3] as int?,
     );
   }
 

@@ -111,6 +111,7 @@ public class VideoPlayerPlugin implements FlutterPlugin, AndroidVideoPlayerApi {
         TextureVideoPlayer.create(
             flutterState.applicationContext,
             VideoPlayerEventCallbacks.bindTo(flutterState.binaryMessenger, streamInstance),
+            flutterState.textureRegistry,
             handle,
             videoAsset,
             sharedOptions);

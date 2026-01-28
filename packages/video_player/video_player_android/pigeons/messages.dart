@@ -77,6 +77,9 @@ class ReloadingEndEvent extends PlatformVideoEvent {
 
   /// The height of the video in pixels.
   late final int height;
+
+  /// The new texture ID if the texture was recreated (TextureVideoPlayer only).
+  late final int? textureId;
 }
 
 /// Information passed to the platform view creation.

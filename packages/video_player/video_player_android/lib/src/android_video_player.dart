@@ -360,7 +360,7 @@ class _PlayerInstance {
   bool _isBuffering = false;
   Completer<void>? _audioTrackSelectionCompleter;
 
-  final VideoPlayerViewState viewState;
+  VideoPlayerViewState viewState;
 
   Future<void> setLooping(bool looping) {
     return _api.setLooping(looping);
@@ -541,6 +541,9 @@ class _PlayerInstance {
           VideoEvent(eventType: VideoEventType.reloadingStart),
         );
       case ReloadingEndEvent _:
+        if (event.textureId != null) {
+          viewState = VideoPlayerTextureViewState(textureId: event.textureId!);
+        }
         _eventStreamController.add(
           VideoEvent(
             eventType: VideoEventType.reloadingEnd,

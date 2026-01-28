@@ -49,6 +49,6 @@ public final class PlatformViewExoPlayerEventListener extends ExoPlayerEventList
     VideoSize videoSize = exoPlayer.getVideoSize();
     int width = videoSize.width;
     int height = videoSize.height;
-    events.onReloadingEnd(width, height, exoPlayer.getDuration());
+    events.onReloadingEnd(width, height, exoPlayer.getDuration(), null);
   }
 }

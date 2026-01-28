@@ -55,8 +55,8 @@ final class VideoPlayerEventCallbacks implements VideoPlayerCallbacks {
   }
 
   @Override
-  public void onReloadingEnd(int width, int height, long durationInMs) {
-    eventSink.success(new ReloadingEndEvent(durationInMs, (long) width, (long) height));
+  public void onReloadingEnd(int width, int height, long durationInMs, @Nullable Long textureId) {
+    eventSink.success(new ReloadingEndEvent(durationInMs, (long) width, (long) height, textureId));
   }
 
   @Override

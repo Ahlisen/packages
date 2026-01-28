@@ -5,6 +5,7 @@
 package io.flutter.plugins.videoplayer.texture;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.OptIn;
 import androidx.media3.common.Format;
 import androidx.media3.common.VideoSize;
@@ -15,6 +16,7 @@ import java.util.Objects;
 
 public final class TextureExoPlayerEventListener extends ExoPlayerEventListener {
   private final boolean surfaceProducerHandlesCropAndRotation;
+  @Nullable private Long pendingTextureId = null;
 
   public TextureExoPlayerEventListener(
       @NonNull ExoPlayer exoPlayer,
@@ -22,6 +24,10 @@ public final class TextureExoPlayerEventListener extends ExoPlayerEventListener 
       boolean surfaceProducerHandlesCropAndRotation) {
     super(exoPlayer, events);
     this.surfaceProducerHandlesCropAndRotation = surfaceProducerHandlesCropAndRotation;
+  }
+
+  public void setNewTextureId(@Nullable Long textureId) {
+    this.pendingTextureId = textureId;
   }
 
   @Override
@@ -54,7 +60,9 @@ public final class TextureExoPlayerEventListener extends ExoPlayerEventListener 
   @Override
   protected void sendReloadingEnd() {
     VideoSize videoSize = exoPlayer.getVideoSize();
-    events.onReloadingEnd(videoSize.width, videoSize.height, exoPlayer.getDuration());
+    Long textureId = pendingTextureId;
+    pendingTextureId = null;
+    events.onReloadingEnd(videoSize.width, videoSize.height, exoPlayer.getDuration(), textureId);
   }
 
   @OptIn(markerClass = androidx.media3.common.util.UnstableApi.class)

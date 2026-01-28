@@ -31,12 +31,12 @@ import java.util.List;
  */
 public abstract class VideoPlayer implements VideoPlayerInstanceApi {
   @NonNull protected final VideoPlayerCallbacks videoPlayerEvents;
-  @Nullable protected final SurfaceProducer surfaceProducer;
+  @Nullable protected SurfaceProducer surfaceProducer;
   @Nullable private DisposeHandler disposeHandler;
   @NonNull protected ExoPlayer exoPlayer;
   // TODO: Migrate to stable API, see https://github.com/flutter/flutter/issues/147039.
   @UnstableApi @Nullable protected DefaultTrackSelector trackSelector;
-  @NonNull private ExoPlayerEventListener exoPlayerEventListener;
+  @NonNull protected ExoPlayerEventListener exoPlayerEventListener;
 
   /** A closure-compatible signature since {@link java.util.function.Supplier} is API level 24. */
   public interface ExoPlayerProvider {
@@ -82,8 +82,10 @@ public abstract class VideoPlayer implements VideoPlayerInstanceApi {
 
     if (surfaceProducer != null) {
       exoPlayerEventListener.setOnLoopCallback(() -> {
-        exoPlayer.clearVideoSurface();
-        exoPlayer.setVideoSurface(surfaceProducer.getSurface());
+        if (this.surfaceProducer != null) {
+          exoPlayer.clearVideoSurface();
+          exoPlayer.setVideoSurface(this.surfaceProducer.getSurface());
+        }
       });
     }
   }
