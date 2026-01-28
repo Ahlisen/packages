@@ -31,6 +31,9 @@
 // (e.g., after a seek while paused). If YES, the display link should continue to run until the next
 // frame is successfully provided.
 @property(nonatomic, assign) BOOL waitingForFrame;
+// Whether waiting for the first frame of a newly loaded asset. Unlike waitingForFrame,
+// this doesn't have a short timeout since loading can take longer than seeks.
+@property(nonatomic, assign) BOOL waitingForNewAssetFrame;
 
 /// Ensures that the frame updater runs until a frame is rendered, regardless of play/pause state.
 - (void)expectFrame;
@@ -101,14 +104,50 @@
 
 - (void)updatePlayingState {
   [super updatePlayingState];
+
   // If the texture is still waiting for an expected frame, the display link needs to keep
   // running until it arrives regardless of the play/pause state.
-  _displayLink.running = self.isPlaying || self.waitingForFrame;
+  _displayLink.running = self.isPlaying || self.waitingForFrame || self.waitingForNewAssetFrame;
 }
 
 - (void)loadAsset:(NSURL *)url httpHeaders:(NSDictionary<NSString *,NSString *> *)httpHeaders {
+    // Release the old pixel buffer
+    CVBufferRelease(self.latestPixelBuffer);
+
+    // Create a transparent pixel buffer to avoid showing stale frames from the previous video
+    CVPixelBufferRef transparentBuffer = NULL;
+    NSDictionary *pixelBufferAttributes = @{
+        (id)kCVPixelBufferPixelFormatTypeKey : @(kCVPixelFormatType_32BGRA),
+        (id)kCVPixelBufferIOSurfacePropertiesKey : @{}
+    };
+    CVReturn status = CVPixelBufferCreate(kCFAllocatorDefault,
+                                          1, 1,  // 1x1 transparent pixel
+                                          kCVPixelFormatType_32BGRA,
+                                          (__bridge CFDictionaryRef)pixelBufferAttributes,
+                                          &transparentBuffer);
+    if (status == kCVReturnSuccess && transparentBuffer) {
+        // Set the buffer to opaque black (BGRA = 0,0,0,255)
+        CVPixelBufferLockBaseAddress(transparentBuffer, 0);
+        uint8_t *baseAddress = (uint8_t *)CVPixelBufferGetBaseAddress(transparentBuffer);
+        baseAddress[0] = 0;    // B
+        baseAddress[1] = 0;    // G
+        baseAddress[2] = 0;    // R
+        baseAddress[3] = 255;  // A (fully opaque)
+        CVPixelBufferUnlockBaseAddress(transparentBuffer, 0);
+        self.latestPixelBuffer = transparentBuffer;
+    } else {
+        self.latestPixelBuffer = NULL;
+    }
+
+    // Reset timing state to avoid drift issues with the new video
+    self.targetTime = 0;
+
+    // Keep the display link running until we receive the first frame of the new video.
+    // Unlike waitingForFrame (used for seeks and first init), this doesn't have a short timeout since
+    // loading a new asset can take longer.
+    self.waitingForNewAssetFrame = YES;
+
     [super loadAsset:url httpHeaders:httpHeaders];
-    [self expectFrame];
 }
 
 - (void)seekTo:(NSInteger)position completion:(void (^)(FlutterError *_Nullable))completion {
@@ -171,11 +210,16 @@
     }
   }
 
-  if (self.waitingForFrame && buffer) {
-    self.waitingForFrame = NO;
+  if (buffer) {
+    if (self.waitingForFrame) {
+      self.waitingForFrame = NO;
+    }
+    if (self.waitingForNewAssetFrame) {
+      self.waitingForNewAssetFrame = NO;
+    }
     // If the display link was only running temporarily to pick up a new frame while the video was
     // paused, stop it again.
-    if (!self.isPlaying) {
+    if (!self.isPlaying && !self.waitingForFrame && !self.waitingForNewAssetFrame) {
       self.displayLink.running = NO;
     }
   }
